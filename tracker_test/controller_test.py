@@ -33,7 +33,7 @@ if interval:
         isP = True
         for i in range(12):
             for j in range(10):
-                std[i] += (s[i]/10-x[j][i])**2
+                std[i] += (float(s[i])/10-float(x[j][i]))**2
             std[i] = (std[i]/9)**0.5
             if(std[i] > 0.001):
                 isP = False
