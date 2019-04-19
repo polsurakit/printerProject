@@ -21,6 +21,18 @@ cameraX(cameraX), cameraY(cameraY), cameraZ(cameraZ), field(field) {
     theta = 0;
 };
 
+void myPrinter::calibration(){
+
+    cout << "move printer to 0 0 0 (moveto 0 0 0)" << endl;
+    //get vive position x,y,z;
+    cout << "move printer to 0 10 0 (moveto 0 10 0)" << endl;
+    cout << "move printer to 0 20 0 (moveto 0 10 0)" << endl;
+    cout << "move printer to 0 30 0 (moveto 0 10 0)" << endl;
+    cout << "move printer to 0 40 0 (moveto 0 10 0)" << endl;
+
+
+}
+
 vector<double> myPrinter::getPosition(){
     vector<double> result;
     cin >> x >> y >> theta;
