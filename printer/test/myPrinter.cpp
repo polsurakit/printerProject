@@ -9,7 +9,12 @@
 #include "opencv2/opencv.hpp"
 #include "myPrinter.hpp"
 #include "../include/HTTPRequest.hpp"
+#include <cstdio>
 #include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <array>
 
 using namespace std;
 
@@ -33,65 +38,95 @@ void myPrinter::calibration(){
 
 }
 
+string exec(const char* cmd) {
+    array<char, 128> buffer;
+    string result;
+    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
 vector<double> myPrinter::getPosition(){
     vector<double> result;
-    cin >> x >> y >> theta;
-    theta = theta/180*M_PI;
-    result.push_back(x);
-    result.push_back(y);
-    result.push_back(theta);
-    return result;
-    try
-    {
-        string url = "http://0.0.0.0:5000/";
-        std::string method = "GET";
-        std::string arguments;
-        std::string output;
+    // cin >> x >> y >> theta;
+    // theta = theta/180*M_PI;
+    // result.push_back(x);
+    // result.push_back(y);
+    // result.push_back(theta);
+    // return result;
 
-        http::Request request(url);
-
-        http::Response response = request.send(method, arguments, {
-            "Content-Type: application/x-www-form-urlencoded",
-            "User-Agent: runscope/0.1"
-        });
-
-        if (!output.empty())
-        {
-            std::ofstream outfile(output, std::ofstream::binary);
-            outfile.write(reinterpret_cast<const char*>(response.body.data()),
-                          static_cast<std::streamsize>(response.body.size()));
+    char* cmd = "python3 ../../tracker_test/controller_test.py 1";
+    string r = exec(cmd);
+    cout << "result " << r << endl;
+    vector<string> info;
+    int idx = 0;
+    for(unsigned int i = 0 ; i < r.size() ; i++){
+        if(r[i]==' '){
+            idx++;
+            continue;
         }
-        else{
-            vector<string> vs(3);
-            int idx = 0;
-            for(unsigned int i = 0 ; i < response.body.size() ; i++){
-                if(response.body[i]==' '){
-                    idx++;
-                    continue;
-                }
-                vs[idx] += response.body[i];
-            }
-            //have to change basis in the section
-            //and assign to printer's x,y,theta
-            double retx = stod(vs[0]);
-            double rety = stod(vs[1]);
-            double rettheta = stod(vs[2]);
-            x = retx;
-            y = rety;
-            theta = rettheta;
-            result.push_back(retx);
-            result.push_back(rety);
-            result.push_back(rettheta);
-        }
+        info[idx] += r[i];
+    }
+    result.push_back(stod(info[0]));
+    result.push_back(stod(info[2]));
+    result.push_back(stod(info[3]));
 
-        std::cout << response.body.data() << std::endl;
-        return result;
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "Request failed, error: " << e.what() << std::endl;
-        //return EXIT_FAILURE;
-    }
+    // try
+    // {
+    //     string url = "http://0.0.0.0:5000/";
+    //     std::string method = "GET";
+    //     std::string arguments;
+    //     std::string output;
+
+    //     http::Request request(url);
+
+    //     http::Response response = request.send(method, arguments, {
+    //         "Content-Type: application/x-www-form-urlencoded",
+    //         "User-Agent: runscope/0.1"
+    //     });
+
+    //     if (!output.empty())
+    //     {
+    //         std::ofstream outfile(output, std::ofstream::binary);
+    //         outfile.write(reinterpret_cast<const char*>(response.body.data()),
+    //                       static_cast<std::streamsize>(response.body.size()));
+    //     }
+    //     else{
+    //         vector<string> vs(3);
+    //         int idx = 0;
+            // for(unsigned int i = 0 ; i < response.body.size() ; i++){
+            //     if(response.body[i]==' '){
+            //         idx++;
+            //         continue;
+            //     }
+            //     vs[idx] += response.body[i];
+            // }
+    //         //have to change basis in the section
+    //         //and assign to printer's x,y,theta
+    //         double retx = stod(vs[0]);
+    //         double rety = stod(vs[1]);
+    //         double rettheta = stod(vs[2]);
+    //         x = retx;
+    //         y = rety;
+    //         theta = rettheta;
+    //         result.push_back(retx);
+    //         result.push_back(rety);
+    //         result.push_back(rettheta);
+    //     }
+
+    //     std::cout << response.body.data() << std::endl;
+    //     return result;
+    // }
+    // catch (const std::exception& e)
+    // {
+    //     std::cerr << "Request failed, error: " << e.what() << std::endl;
+    //     //return EXIT_FAILURE;
+    // }
 
 
     return result;
@@ -190,7 +225,10 @@ void myPrinter::paint3(int xlocal, int ylocal, Vec3b c, Mat field){
 };
 
 void myPrinter::saveTifFile(){
-    imwrite("tiffile/tiffile.tif",printField);
+    Mat picField;
+    int sz = round(printSize/2.54*100); //100 is dpi
+    resize(printField,picField,Size(sz, sz),0,0);
+    imwrite("tiffile/tiffile.tif",picField);
     system("python3 tiffile/Tiff.py tiffile.tif");
     cout << "saveFile\n";
 }
