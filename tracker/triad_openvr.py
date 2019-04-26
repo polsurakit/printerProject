@@ -10,6 +10,10 @@ def update_text(txt):
 
 #Convert the standard 3x4 position/rotation matrix to a x,y,z location and the appropriate Euler angles (in degrees)
 def convert_to_euler(pose_mat):
+    #yaw = c ****
+    #pitch = b
+    #roll = a
+    
     yaw = 180 / math.pi * math.atan(pose_mat[1][0] /pose_mat[0][0])
     pitch = 180 / math.pi * math.atan(-1 * pose_mat[2][0] / math.sqrt(pow(pose_mat[2][1], 2) + math.pow(pose_mat[2][2], 2)))
     roll = 180 / math.pi * math.atan(pose_mat[2][1] /pose_mat[2][2])

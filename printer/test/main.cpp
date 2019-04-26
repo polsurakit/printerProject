@@ -11,12 +11,13 @@
 using namespace cv;
 #include <iostream>
 #include <fstream>
-#include "HTTPRequest.hpp"
+// #include "HTTPRequest.hpp"
 using namespace std;
 #include "myCamera.hpp"
 #include "myPrinter.hpp"
 #include "myRandom.hpp"
 #include <map>
+
 bool isSimulation = true;
 //var
 string INPUT_NAME = "test.jpg";
@@ -266,7 +267,7 @@ int main(int argc, char** argv)
 {
     initialize();
     printer.getCameraImage();
-    showResult();
+    // showResult();
     algorithm6();
     cout << "Save file ..." << endl;
     imwrite(OUTPUT_NAME, field);
@@ -277,7 +278,7 @@ int main(int argc, char** argv)
 void algorithm6(){
     //showResult();
     fillzone3();
-    showResult();
+    // showResult();
     cout << "start" << endl;
     int direction = 0;
     int i = firstPosition;
@@ -313,8 +314,8 @@ void algorithm6(){
                 // bool chkx = (i-printFieldSize/2 <= X && X < j+printFieldSize/2);
                 // bool chky = (j-printFieldSize/2 <= Y && Y < j+printFieldSize/2);
                 // if(!chkx || !chky) continue;
-                if(Y<j-printFieldSize || Y >= j+printFieldSize) continue;
-                if(X<i-printFieldSize || X >= i+printFieldSize) continue;
+                if(Y<j-printFieldSize/2 || Y >= j+printFieldSize/2) continue;
+                if(X<i-printFieldSize/2 || X >= i+printFieldSize/2) continue;
                 int z = zone[Y][X];
                 if(z==0 || z==zone2[(int)pos[1] + posY][(int)pos[0]+posX]) continue;
                 if(Y<TOPLEFTY || X<TOPLEFTX) continue;
@@ -326,6 +327,7 @@ void algorithm6(){
                 //cout << ii << " " << jj << " " << z << endl;
                 if(z!=1) {
                     if(z==2){
+                        //print outside wrong
                         int c = checkCase2(Y,X,(int)pos[1], (int)pos[0]);
                         int c0,c1,c2;
                         c0 = exColor[0]+(int)((255-exColor[0])*zone3[Y][X][c]);
@@ -364,7 +366,7 @@ void algorithm6(){
                 else{
                         color = Vec3b(exColor[0],exColor[1],exColor[2]);
                 }
-                zone2[Y][X]++;
+                // zone2[Y][X]++;
                 printer.paint3(ii,jj, color, field);
             }
         }

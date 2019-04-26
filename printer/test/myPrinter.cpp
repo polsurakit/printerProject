@@ -8,7 +8,7 @@
 
 #include "opencv2/opencv.hpp"
 #include "myPrinter.hpp"
-#include "../include/HTTPRequest.hpp"
+// #include "../include/HTTPRequest.hpp"
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -221,7 +221,7 @@ void myPrinter::paint3(int xlocal, int ylocal, Vec3b c, Mat field){
     g = min(255,max(0,g+((int)(c.val[1]))-255));
     r = min(255,max(0,r+((int)(c.val[2]))-255));
     field.at<Vec3b>(posY+y,posX+x) = Vec3b(b,g,r);
-    printField.at<Vec3b>(ylocal+1500, xlocal+1500) = c;
+    printField.at<Vec3b>(ylocal+printFieldSize/2, xlocal+printFieldSize/2) = c;
 };
 
 void myPrinter::saveTifFile(){

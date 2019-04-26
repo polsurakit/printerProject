@@ -159,21 +159,20 @@ if mode == 0:
 elif mode == 1:
     #full calibration (rot+pos)
     #requires 1+4 moves (1 correct rotation + 4 angles of rec)
-    
-    print("move printer to the top left corner")
-    print("Press ENTER after finished moving")
-    input()
-    tl = getControllerInfo(v,interval)
-    print(tl)
-    tl = tl[3]
-    print("Data collected")
-
     print("move printer to the top right corner")
     print("Press ENTER after finished moving")
     input()
     tr = getControllerInfo(v,interval)
     print(tr)
     tr = tr[3]
+    print("Data collected")
+
+    print("move printer to the bottom right corner")
+    print("Press ENTER after finished moving")
+    input()
+    br = getControllerInfo(v,interval)
+    print(br)
+    br = br[3]
     print("Data collected")
 
     print("move printer to the bottom left corner")
@@ -184,12 +183,12 @@ elif mode == 1:
     bl = bl[3]
     print("Data collected")
 
-    print("move printer to the bottom left corner")
+    print("move printer to the top left corner")
     print("Press ENTER after finished moving")
     input()
-    br = getControllerInfo(v,interval)
-    print(br)
-    br = br[3]
+    tl = getControllerInfo(v,interval)
+    print(tl)
+    tl = tl[3]
     print("Data collected")
 
     print("move printer to the origin(0,0) with right rotation")
@@ -202,15 +201,22 @@ elif mode == 1:
     saveRotationMatrix(origin[:3])
 
     #find M
-    Ax = np.array([[tr[0]-tl[0], tr[1]-tl[1], tr[2]-tl[2]],[br[0]-tl[0],br[1]-tl[1],br[2]-tl[2]]])
-    bx = np.array([RECTANGLE_W, RECTANGLE_W])
+    Ax = []
+    Ax.append([tr[0]-tl[0], tr[1]-tl[1], tr[2]-tl[2]])
+    Ax.append([br[0]-tl[0], br[1]-tl[1], br[2]-tl[2]])
+    Ax.append([bl[0]-tl[0], bl[1]-tl[1], bl[2]-tl[2]])
+    Ax.append([bl[0]-tr[0], bl[1]-tr[1], bl[2]-tr[2]])
+    Ax.append([br[0]-tr[0], br[1]-tr[1], br[2]-tr[2]])
+    Ax.append([br[0]-bl[0], br[1]-bl[1], br[2]-bl[2]])
+    Ax = np.array(Ax)
+    bx = np.array([RECTANGLE_W, RECTANGLE_W, 0, 0, -RECTANGLE_W, RECTANGLE_W])
     M0 = (np.linalg.inv(Ax.transpose().dot(Ax)).dot(Ax.transpose())).dot(bx)
     print(M0)
 
     M1 = np.array([[0.,0.,0.]])
 
-    Az = np.array([[bl[0]-tl[0], bl[1]-tl[1], bl[2]-tl[2]],[br[0]-tl[0],br[1]-tl[1],br[2]-tl[2]]])
-    bz = np.array([RECTANGLE_H, RECTANGLE_H])
+    Az = Ax
+    bz = np.array([0, RECTANGLE_H, RECTANGLE_H, RECTANGLE_H, RECTANGLE_H, 0])
     M2 = (np.linalg.inv(Az.transpose().dot(Az)).dot(Az.transpose())).dot(bz)
     print(M2)
 
@@ -231,56 +237,7 @@ elif mode == 2:
     #pos calibration and save (find M[:2] and t[:2])
     #requires 4 moves (4 angles of rec)
     #note that M[2] and t[2] is not necessary for our work
-    print("move printer to the top left corner")
-    print("Press ENTER after finished moving")
-    input()
-    tl = getControllerInfo(v,interval)
-    tl = tl[3]
-    print("Data collected")
-    print("move printer to the top right corner")
-    print("Press ENTER after finished moving")
-    input()
-    tr = getControllerInfo(v,interval)
-    tr = tr[3]
-    print("Data collected")
-    print("move printer to the bottom left corner")
-    print("Press ENTER after finished moving")
-    input()
-    bl = getControllerInfo(v,interval)
-    bl = bl[3]
-    print("Data collected")
-    print("move printer to the bottom left corner")
-    print("Press ENTER after finished moving")
-    input()
-    br = getControllerInfo(v,interval)
-    br = br[3]
-    print("Data collected")
-    print("move printer to the origin(0,0) with right rotation")
-    print("Press ENTER after finished moving")
-    input()
-    origin = getControllerInfo(v,interval)
-
-    #find M
-    Ax = np.array([[tr[0]-tl[0], tr[1]-tl[1], tr[2]-tl[2]],[br[0]-tl[0],br[1]-tl[1],br[2]-tl[2]]])
-    bx = np.array([RECTANGLE_W, RECTANGLE_W])
-    M0 = (np.linalg.inv(Ax.transpose().dot(Ax)).dot(Ax.transpose())).dot(bx)
-    print(M0)
-    M1 = np.array([[0,0,0]])
-    Az = np.array([[bl[0]-tl[0], bl[1]-tl[1], bl[2]-tl[2]],[br[0]-tl[0],br[1]-tl[1],br[2]-tl[2]]])
-    bz = np.array([RECTANGLE_H, RECTANGLE_H])
-    print(Az.transpose().dot(Az))
-    M2 = (np.linalg.inv(Az.transpose().dot(Az)).dot(Az.transpose())).dot(bz)
-    print(M2)
-
-    M = [M0,M1,M2]
-
-    #find t
-    t = M.dot(np.array([origin[3]]))
-
-    #save M,t
-    saveSystemMatrix(M,t)
-
-    print("Finished calibration")
+    
 
 elif mode == 3:
     #rot calibration and save
@@ -310,12 +267,12 @@ elif mode == 4:
         #print(M.dot(np.array([info[3]]).transpose()))
         y = M.dot(np.array([info[3]]).transpose()) - t
         #print(y)
-        rot_mat = rot.dot(np.array(info[:3]))
+        rot_mat = np.array(info[:3]).dot(rot)
         yaw = 180 / math.pi * math.atan(rot_mat[1][0] /rot_mat[0][0])
         pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
         roll = 180 / math.pi * math.atan(rot_mat[2][1] /rot_mat[2][2])
-        print(yaw,pitch,roll)
-        print('##################',y[0,0],y[1,0],y[2,0])
+        print('yaw,pitch,roll=',yaw,pitch,roll)
+        print('################## x,y,z=',y[0,0],y[1,0],y[2,0])
 
 
 
@@ -330,7 +287,7 @@ elif mode == 5:
     
     info = getControllerInfo(v,interval)
     y = M.dot(np.array([info[3]])) - t
-    rot_mat = rot.dot(np.array(info[:3]))
+        rot_mat = np.array(info[:3]).dot(rot)
     yaw = 180 / math.pi * math.atan(rot_mat[1][0] /rot_mat[0][0])
     pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
     roll = 180 / math.pi * math.atan(rot_mat[2][1] /rot_mat[2][2])
