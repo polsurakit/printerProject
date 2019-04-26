@@ -4,8 +4,8 @@ import sys
 import numpy as np
 import math
 
-RECTANGLE_W = 3300.0        #in 0.1 mm.
-RECTANGLE_H = 3300.0        #in 0.1 mm.
+RECTANGLE_W = 3030.0        #in 0.1 mm.
+RECTANGLE_H = 3030.0        #in 0.1 mm.
 
 ROT_MATRIX_FILENAME = "rotationMatrix.txt"
 SYS_MATRIX_FILENAME = "systemMatrix.txt"
@@ -80,10 +80,10 @@ def saveSystemMatrix(M,t):
     txt = ""
     for i in range(3):
         for j in range(3):
-            txt += M[i][j] + ' '
+            txt += str(M[i][j]) + ' '
         txt += "\n"
     for i in range(3):
-        txt += t[i] + ' '
+        txt += str(t[i]) + ' '
     txt += "\n"
     file = open(SYS_MATRIX_FILENAME, 'w')
     file.write(txt)
@@ -213,7 +213,7 @@ elif mode == 1:
     M0 = (np.linalg.inv(Ax.transpose().dot(Ax)).dot(Ax.transpose())).dot(bx)
     print(M0)
 
-    M1 = np.array([[0.,0.,0.]])
+    M1 = np.array([0.,0.,0.])
 
     Az = Ax
     bz = np.array([0, RECTANGLE_H, RECTANGLE_H, RECTANGLE_H, RECTANGLE_H, 0])
@@ -237,6 +237,7 @@ elif mode == 2:
     #pos calibration and save (find M[:2] and t[:2])
     #requires 4 moves (4 angles of rec)
     #note that M[2] and t[2] is not necessary for our work
+    abcd = 1
     
 
 elif mode == 3:
@@ -287,7 +288,7 @@ elif mode == 5:
     
     info = getControllerInfo(v,interval)
     y = M.dot(np.array([info[3]])) - t
-        rot_mat = np.array(info[:3]).dot(rot)
+    rot_mat = np.array(info[:3]).dot(rot)
     yaw = 180 / math.pi * math.atan(rot_mat[1][0] /rot_mat[0][0])
     pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
     roll = 180 / math.pi * math.atan(rot_mat[2][1] /rot_mat[2][2])
@@ -295,4 +296,4 @@ elif mode == 5:
     txt = str(y[0]) + ' ' + str(y[1]) + ' ' + str(y[2])
     txt += ' ' + yaw + ' ' + pitch + ' ' + roll
     print(txt)
-
+    #we use x,z,pitch
