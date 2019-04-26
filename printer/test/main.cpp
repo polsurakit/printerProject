@@ -17,15 +17,11 @@ using namespace std;
 #include "myPrinter.hpp"
 #include "myRandom.hpp"
 #include <map>
+#include "constant.cpp"
 
 bool isSimulation = true;
 //var
-string INPUT_NAME = "test.jpg";
-string OUTPUT_NAME = "algor3_new.jpg";
-bool isBlur = false;
 
-const int TARGET_H_SIZE = 10000; //0.1 millimeter / pixel
-const int TARGET_W_SIZE = 10000; //0.1 millimeter / pixel
 myRandom randomGenerator;
 const int fieldSize = 15000; //1.5m x 1.5m field
 Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0)); //0.1 millimeter / pixel

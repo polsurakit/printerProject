@@ -10,13 +10,13 @@ RECTANGLE_H = 3030.0        #in 0.1 mm.
 ROT_MATRIX_FILENAME = "rotationMatrix.txt"
 SYS_MATRIX_FILENAME = "systemMatrix.txt"
 
-def rearrange(s):
+def rearrange(s,n):
     result = [[],[],[],[]]
     for i in range(12):
         if (i+1) %4 == 0:
-            result[3].append(s[i]*1000)
+            result[3].append(s[i]/n)
         else:
-            result[i//4].append(s[i]/10)
+            result[i//4].append(s[i]/n)
     return result
 
 def testRearrange():
@@ -26,17 +26,29 @@ def testRearrange():
     result = rearrange(s)
     print(result)
 
-def getControllerInfo(v,interval):
+def getControllerInfo(v,interval,isprint=True):
+    minx = 9999999999
+    miny = 9999999999
+    minz = 9999999999
+    maxx = -9999999999
+    maxy = -9999999999
+    maxz = -9999999999
+    cx = 0
+    cy = 0
+    cz = 0
     while(True):
         x = []
+        n = 30
         s = [0]*12
-        for i in range(10):
+        for i in range(n):
             start = time.time()
             txt = ""
             xi = v.devices["controller_1"].get_pose()
             x.append(xi)
             for j in range(3):
                 for k in range(4):
+                    if k==3:
+                        xi[j][k]*=10000
                     s[j*4+k] += xi[j][k]
             sleep_time = interval-(time.time()-start)
             if sleep_time>0:
@@ -45,11 +57,42 @@ def getControllerInfo(v,interval):
         std = [0]*12
         isP = True
         for i in range(12):
-            for j in range(10):
-                std[i] += (float(s[i])/10-float(x[j][i//4][i%4]))**2
-            std[i] = (std[i]/9)**0.5
-        if max(std) < 0.0001:
-            return rearrange(s)
+            for j in range(n):
+                std[i] += (float(s[i])/n-float(x[j][i//4][i%4]))**2
+            std[i] = (std[i]/(n-1))**0.5
+        stdpos = [std[3], std[7], std[11]]
+        std[3] = 0
+        std[7] = 0
+        std[11] = 0
+        x = s[3]/n
+        y = s[7]/n
+        z = s[11]/n
+        if x < minx or x > maxx:
+            maxx = max(maxx, math.ceil(x))
+            minx = min(minx, math.floor(x))
+            cx = 0
+        else:
+            cx += 1
+        if y < miny or y > maxy:
+            maxy = max(maxy, math.ceil(y))
+            miny = min(miny, math.floor(y))
+            cy = 0
+        else:
+            cy += 1
+        if z < minz or z > maxz:
+            maxz = max(maxz, math.ceil(z))
+            minz = min(minz, math.floor(z))
+            cz = 0
+        else :
+            cz += 1
+        m1 = max(std)
+        
+        if m1 < 0.0001:
+
+            if cx > 120 and cy > 120 and cz > 120:
+                return rearrange(s,n)
+            elif isprint:
+                print(s[3]/n, s[7]/n, s[11]/n, cx, cy, cz)
 
 def saveRotationMatrix(rot):
     #get and save to file
@@ -83,7 +126,7 @@ def saveSystemMatrix(M,t):
             txt += str(M[i][j]) + ' '
         txt += "\n"
     for i in range(3):
-        txt += str(t[i]) + ' '
+        txt += str(t[0][i]) + ' '
     txt += "\n"
     file = open(SYS_MATRIX_FILENAME, 'w')
     file.write(txt)
@@ -112,7 +155,7 @@ def invMatrix(a):
 
 v = triad_openvr.triad_openvr()
 v.print_discovered_objects()
-interval = 1/250
+interval = 1/100
 
 if len(sys.argv) > 1:
     #get position and angle in our system as string
@@ -122,15 +165,15 @@ if len(sys.argv) > 1:
     M = np.array(M)
     t = np.array([t])
     
-    info = getControllerInfo(v,interval)
-    y = M.dot(np.array([info[3]])) - t
-    rot_mat = rot.dot(np.array(info[:3]))
+    info = getControllerInfo(v,interval,False)
+    y = M.dot(np.array([info[3]]).transpose()) - t.transpose()
+    rot_mat = np.array(info[:3]).dot(rot)
     yaw = 180 / math.pi * math.atan(rot_mat[1][0] /rot_mat[0][0])
     pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
     roll = 180 / math.pi * math.atan(rot_mat[2][1] /rot_mat[2][2])
     
-    txt = str(y[0]) + ' ' + str(y[1]) + ' ' + str(y[2])
-    txt += ' ' + yaw + ' ' + pitch + ' ' + roll
+    txt = str(y[0][0]) + ' ' + str(y[1][0]) + ' ' + str(y[2][0])
+    txt += ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll)
     print(txt)
     sys.exit()
 
@@ -209,8 +252,9 @@ elif mode == 1:
     Ax.append([br[0]-tr[0], br[1]-tr[1], br[2]-tr[2]])
     Ax.append([br[0]-bl[0], br[1]-bl[1], br[2]-bl[2]])
     Ax = np.array(Ax)
-    bx = np.array([RECTANGLE_W, RECTANGLE_W, 0, 0, -RECTANGLE_W, RECTANGLE_W])
+    bx = np.array([RECTANGLE_W, RECTANGLE_W, 0, -RECTANGLE_W, 0, RECTANGLE_W])
     M0 = (np.linalg.inv(Ax.transpose().dot(Ax)).dot(Ax.transpose())).dot(bx)
+    
     print(M0)
 
     M1 = np.array([0.,0.,0.])
@@ -262,9 +306,10 @@ elif mode == 4:
     t = np.array([t]).transpose()
     print(M)
     print(t)
-    input()
+    
     while(True):
-        info = getControllerInfo(v,interval)
+        input()
+        info = getControllerInfo(v,interval,False)
         #print(M.dot(np.array([info[3]]).transpose()))
         y = M.dot(np.array([info[3]]).transpose()) - t
         #print(y)
