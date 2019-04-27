@@ -19,33 +19,23 @@ using namespace std;
 #include <map>
 #include "constant.cpp"
 
-bool isSimulation = true;
+
 //var
 
 myRandom randomGenerator;
-const int fieldSize = 15000; //1.5m x 1.5m field
+
 Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0)); //0.1 millimeter / pixel
-//int zone[fieldSize][fieldSize];
-//int zone2[fieldSize][fieldSize];
+
 vector<vector<int> > zone;
 vector<vector<int> > zone2;
 vector<vector<vector<double> > > zone3;
 myPrinter printer(0,0,0,field);
-//Mat zone(fieldSize,fieldSize,CV_8UC1,0);
+
 Mat image;
 Mat image2;
 Mat showedImage;
 Mat expectedImage;
 Mat expectedResult;
-int TOPLEFTX = 1000;
-int TOPLEFTY = 1000;
-const int smallWindowSize = 250;
-const int bigWindowSize = 500;
-const int moveStep = 2000;
-const int printFieldSize = printer.printFieldSize;
-const int printSize = printer.printSize;
-const int firstPosition = 1500;
-
 
 void initialize(){
     image = imread(INPUT_NAME);
@@ -232,7 +222,7 @@ void changeDirection(int &i, int &j, int &direction){
 }
 
 int checkCase2(int y, int x, int py, int px){
-    for(int i = firstPosition+printFieldSize/2-(printFieldSize-moveStep) ; i < 14000 ; i+=moveStep){
+    for(int i = firstPosition+printFieldSize/2-(printFieldSize-moveStep) ; i < fieldSize-TOPLEFTY ; i+=moveStep){
         if(i <= y && y < i+printFieldSize-moveStep){
             if(py > y){
                 return 1;
@@ -251,16 +241,14 @@ int checkCase2(int y, int x, int py, int px){
     return 0;
 }
 
-int checkCase4(int y,int x, int py, int px){
-    return 0;
-}
-
-
 void algorithm6();
 
 
 int main(int argc, char** argv)
 {
+    Mat ff(500,500,CV_8UC3,Vec3b(0,0,0));
+    imwrite("test.png",ff);
+    return 0;
     initialize();
     printer.getCameraImage();
     // showResult();
@@ -287,16 +275,21 @@ void algorithm6(){
         
 
         printer.getCameraImage();
-        vector<double> pos;
+        vector<double> pos(3);
         if(isSimulation) pos = printer.getPositionSimulation(); // x, y, theta
-        else pos = printer.getPosition();
+        else{
+            pos[0] = printer.x;
+            pos[1] = printer.y;
+            pos[2] = printer.theta;
+        } 
 
         double theta = pos[2];
+        cout << "go to type on simulation screen\n";
         showResult();
 
         cout << "paint" << endl;
-        for(double ii = -printFieldSize/2; ii < printFieldSize/2 ; ii+=1){
-            for(double jj = -printFieldSize/2; jj < printFieldSize/2 ; jj+=1){
+        for(double ii = -printSize/2; ii < printSize/2 ; ii+=1){
+            for(double jj = -printSize/2; jj < printSize/2 ; jj+=1){
                 //theta = 0;
                 //cout << ii << " " << jj << endl;
 
@@ -305,7 +298,7 @@ void algorithm6(){
                 if((int)pos[1] + posY < 0 || (int)pos[1] + posY >= fieldSize) continue;
                 if((int)pos[0] + posX < 0 || (int)pos[0] + posX >= fieldSize) continue;
                 
-                int Y = (int)pos[1] + posY;
+                int Y = (int)pos[1] + posY; //position in field
                 int X = (int)pos[0]+posX;
                 // bool chkx = (i-printFieldSize/2 <= X && X < j+printFieldSize/2);
                 // bool chky = (j-printFieldSize/2 <= Y && Y < j+printFieldSize/2);
@@ -334,19 +327,19 @@ void algorithm6(){
                     }else{
 
                         int c1,c2,c0;
-                        if(posY >= 300 && posX >= 300){
+                        if(posY >= 100 && posX >= 100){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][0]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][0]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][0]));
-                        }else if(posY >= 300 && posX <= -300){
+                        }else if(posY >= 100 && posX <= -100){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][1]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][1]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][1]));
-                        }else if(posY <= -300 && posX >= 300){
+                        }else if(posY <= -100 && posX >= 100){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][2]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][2]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][2]));
-                        }else if(posY <= -300 && posX <= -300){
+                        }else if(posY <= -100 && posX <= -100){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][3]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][3]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][3]));
@@ -377,8 +370,10 @@ void algorithm6(){
         }
         //show result
         printer.getCameraImage();
-        showResult();
         cout << "show result" << endl;
+        cout << "go to type on simulation screen\n";
+        showResult();
+        
         zone[i][j] = 0;
         changeDirection(i, j, direction);
     }
@@ -389,8 +384,8 @@ void fillzone3(){
     zone.resize(fieldSize,vector<int>(fieldSize));
     zone2.resize(fieldSize,vector<int>(fieldSize));
     zone3.resize(fieldSize,vector<vector<double> >(fieldSize));
-    for(int i = firstPosition ; i < 14000 ; i+=moveStep){
-        for(int j = firstPosition ; j < 14000 ; j+=moveStep){
+    for(int i = firstPosition ; i < BOTTOMRIGHTY ; i+=moveStep){
+        for(int j = firstPosition ; j < BOTTOMRIGHTX ; j+=moveStep){
             for(int k = -printFieldSize/2; k < printFieldSize/2 ; k++){
                 for(int l = -printFieldSize/2 ; l < printFieldSize/2 ; l++){
                     zone[i+k][j+l] += 1;
@@ -403,10 +398,10 @@ void fillzone3(){
     }
     int a = printFieldSize-moveStep;//what is this
     int b = firstPosition+printFieldSize/2-(printFieldSize-moveStep); //firstmerge
-    int c = 2000; //merge step
+    int c = moveStep; //merge step
     cout << "fillcol" << endl;
-    for(int j = b ; j < 14000 ; j+= c){
-        for(int i = TOPLEFTY ; i < 14000 ; i++){
+    for(int j = b ; j < BOTTOMRIGHTX ; j+= c){
+        for(int i = TOPLEFTY ; i < BOTTOMRIGHTY ; i++){
             if(zone[i][j]>2){ //skip 4 area
                 i+=a-1;
                 continue;
@@ -421,8 +416,8 @@ void fillzone3(){
         }
     }
     cout << "fillrow" << endl;
-    for(int i = b ; i < 14000 ; i+= c){
-        for(int j = TOPLEFTX ; j < 14000 ; j++){
+    for(int i = b ; i < BOTTOMRIGHTY ; i+= c){
+        for(int j = TOPLEFTX ; j < BOTTOMRIGHTX ; j++){
             if(zone[i][j]>2){
                 j+=a-1;
                 continue;
@@ -437,8 +432,8 @@ void fillzone3(){
         }
     }
     cout << "fill4" << endl;
-    for(int i = b ; i < 14000 ; i+=c){
-        for(int j = b ; j < 14000 ; j+=c){
+    for(int i = b ; i < BOTTOMRIGHTY ; i+=c){
+        for(int j = b ; j < BOTTOMRIGHTX ; j+=c){
             for(int k = 0 ; k < a ; k++){
                 for(int l = 0 ; l < a ; l++){
                     if(zone[i+k][j+l]==0) break;

@@ -33,7 +33,7 @@ all: CXXFLAGS+=-DDEBUG -g
 endif
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LDFLAGS) myRandom.cpp myCamera.cpp myPrinter.cpp  `pkg-config --libs --cflags opencv` -o $@
+	$(CXX) $(OBJECTS) $(LDFLAGS) myRandom.cpp constant.cpp myCamera.cpp myPrinter.cpp  `pkg-config --libs --cflags opencv` -o $@
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@

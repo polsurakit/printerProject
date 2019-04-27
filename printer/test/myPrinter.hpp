@@ -14,6 +14,7 @@
 #include "opencv2/opencv.hpp"
 #include "myCamera.hpp"
 #include "myRandom.hpp"
+#include "constant.cpp"
 using namespace cv;
 using namespace std;
 
@@ -28,18 +29,17 @@ public:
     double cameraX; //camera position compare to center of printer position
     double cameraY;
     double cameraZ;
-    int printFieldSize = 2500; // 25cm. x 25cm.
-    int printSize = 3000; // 25cm. x 25cm.
+    
     Mat cameraImage;
     Mat field;
     Mat printField;
 
     ////// for simulation
     bool noError = false;
-    double movePositionError = 50; // *.1 mm.
+    double movePositionError = 10; // *.1 mm.
     double moveRotationError = 5; // degree
     double readPositionError = 20; // *.1 mm.
-        double readRotationError = 0.05; //degree
+    double readRotationError = 0.05; //degree
     myRandom randomGenerator;
     //////
 
@@ -55,7 +55,6 @@ public:
     void clearPrintField();
     void print();
     void getCameraImage();
-    void calibration();
 
     void moveSimulation(double newX, double newY);
     vector<double> getPositionSimulation();

@@ -19,8 +19,8 @@ class myCamera{ // 0.1 mm. per pixel
     
 public:
     myCamera();
-    int rowSize = 3000;
-    int colSize = 3000;
+    int rowSize = 2000;
+    int colSize = 2000;
     Mat getImage(double x, double y, double theta, Mat field);
 };
 
