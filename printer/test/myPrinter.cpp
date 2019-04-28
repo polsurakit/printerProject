@@ -21,15 +21,23 @@ using namespace std;
 
 myPrinter::myPrinter(double cameraX, double cameraY, double cameraZ, Mat field) :
 cameraX(cameraX), cameraY(cameraY), cameraZ(cameraZ), field(field) {
-    printField = Mat(printFieldSize,printFieldSize,CV_8UC3,Vec3b(255,255,255));
-    vector<double> result = getPosition();
+    update();
+    cout << isSimulation << endl;
+    printField = Mat(printSize,printSize,CV_8UC3,Vec3b(255,255,255));
+    vector<double> result;
+    if (!isSimulation) result = getPosition();
+    else{
+        result.push_back(1000);
+        result.push_back(1000);
+        result.push_back(0);
+    }
     x = result[0];
     y = result[1];
     theta = result[2]/180*M_PI;
 };
 
 void myPrinter::update(){
-    cout <<"update 1 " << endl;
+    cout <<"update 4 " << endl;
 }
 string exec(const char* cmd) {
     array<char, 128> buffer;
@@ -160,8 +168,8 @@ void myPrinter::paint2(int xlocal, int ylocal, Vec3b c, Mat field){
 
 void myPrinter::paint3(int xlocal, int ylocal, Vec3b c, Mat field){
 
-    if(xlocal < -printFieldSize/2 || xlocal > printFieldSize/2-1) return;
-    if(ylocal < -printFieldSize/2 || ylocal > printFieldSize/2-1) return;
+    if(xlocal < -printSize/2 || xlocal > printSize/2-1) return;
+    if(ylocal < -printSize/2 || ylocal > printSize/2-1) return;
     int posX = round(cos(theta)*(xlocal) + sin(theta)*(ylocal));
     int posY = round(-sin(theta)*(xlocal) + cos(theta)*(ylocal));
     if(y+posY < TOPLEFTY || y+posY >= BOTTOMRIGHTY) return;
@@ -174,12 +182,12 @@ void myPrinter::paint3(int xlocal, int ylocal, Vec3b c, Mat field){
     g = min(255,max(0,g+((int)(c.val[1]))-255));
     r = min(255,max(0,r+((int)(c.val[2]))-255));
     field.at<Vec3b>(posY+y,posX+x) = Vec3b(b,g,r);
-    printField.at<Vec3b>(-ylocal+printFieldSize/2, xlocal+printFieldSize/2) = c;
+    printField.at<Vec3b>(-ylocal+printSize/2, xlocal+printSize/2) = c;
 };
 
 void myPrinter::saveTifFile(){
     Mat picField;
-    int sz = round(printFieldSize/2.54); //100 is dpi
+    int sz = round(printSize/2.54); //100 is dpi
     resize(printField,picField,Size(sz, sz),0,0);
     imwrite("tiffile.png",picField);
     system("python3 tiffile/Tiff.py tiffile.png");
@@ -187,8 +195,8 @@ void myPrinter::saveTifFile(){
 }
 
 void myPrinter::clearPrintField(){
-    for(int i = 0 ; i < printFieldSize ; i++){
-        for(int j = 0 ; j < printFieldSize ; j++){
+    for(int i = 0 ; i < printSize ; i++){
+        for(int j = 0 ; j < printSize; j++){
             printField.at<Vec3b>(i,j) = Vec3b(255,255,255);
         }
     }

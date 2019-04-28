@@ -282,6 +282,21 @@ void algorithm6(){
     //map<pair<int,int>,int > mp;
     while(direction <= 3){
         cout << i << " " << j << endl;
+        cout << "This step will move to x = " << i << " y = " << j << endl;
+        cout << "If you need to skip type 'skip' and Enter" << endl;
+        string input;
+        cin >> input;
+        if (input == "skip"){
+            cout << "Skip this step" << endl;
+            printer.getCameraImage();
+            cout << "show result" << endl;
+            cout << "go to type on simulation screen\n";
+            showResult();
+            zone[i][j] = 0;
+            changeDirection(i, j, direction);
+            continue;
+        }
+        cout << "issim " << isSimulation << endl;
         if(isSimulation) printer.moveSimulation(i,j);
         else printer.move(i, j);
         
@@ -339,19 +354,19 @@ void algorithm6(){
                     }else{
 
                         int c1,c2,c0;
-                        if(posY >= 100 && posX >= 100){
+                        if(Y > j && X > j){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][0]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][0]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][0]));
-                        }else if(posY >= 100 && posX <= -100){
+                        }else if(Y > j && X < j){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][1]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][1]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][1]));
-                        }else if(posY <= -100 && posX >= 100){
+                        }else if(Y < j && X > j){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][2]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][2]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][2]));
-                        }else if(posY <= -100 && posX <= -100){
+                        }else if(Y < j && X < j){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][3]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][3]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][3]));

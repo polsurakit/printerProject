@@ -4,7 +4,7 @@
 
 
 
-const bool isSimulation = false;
+const bool isSimulation = true;
 
 const std::string INPUT_NAME = "test.jpg";
 const std::string OUTPUT_NAME = "algor3_new.jpg";
@@ -24,12 +24,12 @@ const int BOTTOMRIGHTY = fieldSize-TOPLEFTY;
 
 const int smallWindowSize = 250;
 const int bigWindowSize = 500;
-const int moveStep = 750;				//can be calculate
+const int moveStep = 800;				//can be calculate
 const int firstPosition = 800;
 
 
 
-const int printFieldSize = 1000; // 25cm. x 25cm. size that we need to print
+const int printFieldSize = 1200; // 25cm. x 25cm. size that we need to print
 const int printSize = 1500; // 25cm. x 25cm. size that printer can print
 
 const int MERGESIZE = printFieldSize-moveStep;
