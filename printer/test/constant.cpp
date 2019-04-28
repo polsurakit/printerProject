@@ -11,8 +11,8 @@ const std::string OUTPUT_NAME = "algor3_new.jpg";
 const int DPI = 100;
 const bool isBlur = false;
 
-const int TARGET_H_SIZE = 4000; //0.1 millimeter / pixel
-const int TARGET_W_SIZE = 4000; //0.1 millimeter / pixel
+const int TARGET_H_SIZE = 3000; //0.1 millimeter / pixel
+const int TARGET_W_SIZE = 3000; //0.1 millimeter / pixel
 
 const int fieldSize = 7000; //1.5m x 1.5m field
 

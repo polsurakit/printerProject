@@ -115,7 +115,7 @@ def loadRotationMatrix():
         rot[idx] = [float(e) for e in line.split()]
         idx += 1
     file.close()
-    print("Loaded rot from", ROT_MATRIX_FILENAME)
+    # print("Loaded rot from", ROT_MATRIX_FILENAME)
     return rot
 
 def saveSystemMatrix(M,t):
@@ -147,14 +147,14 @@ def loadSystemMatrix():
             M[idx] = [float(e) for e in line.split()]
         idx+=1
     file.close()
-    print("Loaded M,t from", SYS_MATRIX_FILENAME)
+    # print("Loaded M,t from", SYS_MATRIX_FILENAME)
     return [M,t]
 
 def invMatrix(a):
     return np.linalg.inv(a)
 
 v = triad_openvr.triad_openvr()
-v.print_discovered_objects()
+# v.print_discovered_objects()
 interval = 1/100
 
 if len(sys.argv) > 1:

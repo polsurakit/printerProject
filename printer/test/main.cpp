@@ -89,6 +89,7 @@ void showResult(){
         }
     }
     double theta = printer.theta;
+    cout << "theta = " << theta << endl;
     //plot camera line =
     for(int i = -printer.camera.rowSize/2 ; i < printer.camera.rowSize/2 ; i++){
          int j = -printer.camera.colSize/2;
@@ -243,12 +244,23 @@ int checkCase2(int y, int x, int py, int px){
 
 void algorithm6();
 
+string exec1(const char* cmd) {
+    array<char, 128> buffer;
+    string result;
+    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
 
 int main(int argc, char** argv)
 {
-    Mat ff(500,500,CV_8UC3,Vec3b(0,0,0));
-    imwrite("test.png",ff);
-    return 0;
+    printer.update();
+    cout << TARGET_H_SIZE << " " << TARGET_W_SIZE << endl;
     initialize();
     printer.getCameraImage();
     // showResult();

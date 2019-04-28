@@ -55,6 +55,7 @@ public:
     void clearPrintField();
     void print();
     void getCameraImage();
+    void update();
 
     void moveSimulation(double newX, double newY);
     vector<double> getPositionSimulation();

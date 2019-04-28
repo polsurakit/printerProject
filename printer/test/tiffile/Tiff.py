@@ -9,6 +9,6 @@ im = Image.open(filename+'.png')
 im.save("_"+filename+'.tif', format='TIFF',\
 dpi=(100., 100.), compression='tiff_lzw',)
 
-im.save("../../../Multicolor/build/_"+filename+'.tif', format='TIFF',\
-dpi=(100., 100.), compression='tiff_lzw',)
+# im.save("../../../Multicolor/build/_"+filename+'.tif', format='TIFF',\
+# dpi=(100., 100.), compression='tiff_lzw',)
 

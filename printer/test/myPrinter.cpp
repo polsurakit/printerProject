@@ -22,11 +22,15 @@ using namespace std;
 myPrinter::myPrinter(double cameraX, double cameraY, double cameraZ, Mat field) :
 cameraX(cameraX), cameraY(cameraY), cameraZ(cameraZ), field(field) {
     printField = Mat(printFieldSize,printFieldSize,CV_8UC3,Vec3b(255,255,255));
-    x = 1000;
-    y = 1000;
-    theta = 0;
+    vector<double> result = getPosition();
+    x = result[0];
+    y = result[1];
+    theta = result[2]/180*M_PI;
 };
 
+void myPrinter::update(){
+    cout <<"update 1 " << endl;
+}
 string exec(const char* cmd) {
     array<char, 128> buffer;
     string result;
@@ -43,18 +47,19 @@ string exec(const char* cmd) {
 vector<double> myPrinter::getPosition(){
     cout << "get position" << endl;
     vector<double> result;
-    cin >> x >> y >> theta;
-    cout << "get " << x << " " << y << " " << theta << endl;
-    theta = theta/180*M_PI;
-    result.push_back(x);
-    result.push_back(y);
-    result.push_back(theta);
-    return result;
+    // vector<double> result;
+    // cin >> x >> y >> theta;
+    // cout << "get " << x << " " << y << " " << theta << endl;
+    // theta = theta/180*M_PI;
+    // result.push_back(x);
+    // result.push_back(y);
+    // result.push_back(theta);
+    // return result;
 
-    char* cmd = "python3 ../../tracker_test/controller_test.py 1";
+    char* cmd = "python3 controller_test.py 1";
     string r = exec(cmd);
     cout << "result " << r << endl;
-    vector<string> info;
+    vector<string> info(6);
     int idx = 0;
     for(unsigned int i = 0 ; i < r.size() ; i++){
         if(r[i]==' '){
@@ -66,6 +71,10 @@ vector<double> myPrinter::getPosition(){
     result.push_back(stod(info[0]));
     result.push_back(stod(info[2]));
     result.push_back(stod(info[4]));
+    x = result[0];
+    y = result[1];
+    theta = result[2]/180*M_PI;
+    cout << "x = " << x << " y = " << y << " theta = " << theta << endl;  
     return result;
 };
 
@@ -78,12 +87,7 @@ void myPrinter::move(double newX, double newY){
     bool isOK = false;
     while(!isOK){
         //resize(field, window, cv::Size(500, 500), 0, 0);
-        string tmp;
-        cout << "please move to " << newX << " " << newY << endl;
-        cout << "your current position is " << x << " " << y << endl;
-        cout << "after move the printer press ENTER" << endl;
-        cin >> tmp;
-        vector<double> pos = getPosition();
+        
 
         // //plot printer
         // int ratio = 15000/500;
@@ -102,15 +106,22 @@ void myPrinter::move(double newX, double newY){
         //     }
         // }
 
-        if(abs(newY-y)>15) isOK = false;
-        else if(abs(newX-x)>15) isOK = false;
+        if(abs(newY-y)>200) isOK = false;
+        else if(abs(newX-x)>200) isOK = false;
         else if(abs(theta)>10) isOK=false;
         else isOK = true;
         if(isOK){
             cout << "Position is OK" << endl;
         }else{
             cout << "Position is not close enough with x,y,theta= " << x << " " << y << " " << theta << endl;
+            string tmp;
+            cout << "please move to " << newX << " " << newY << endl;
+            cout << "your current position is " << x << " " << y << endl;
+            cout << "after move the printer press ENTER" << endl;
+            cin >> tmp;
+            vector<double> pos = getPosition();
         }
+
         //imshow( "Display window", window);
         //waitKey(0);
     }
@@ -163,15 +174,15 @@ void myPrinter::paint3(int xlocal, int ylocal, Vec3b c, Mat field){
     g = min(255,max(0,g+((int)(c.val[1]))-255));
     r = min(255,max(0,r+((int)(c.val[2]))-255));
     field.at<Vec3b>(posY+y,posX+x) = Vec3b(b,g,r);
-    printField.at<Vec3b>(ylocal+printFieldSize/2, xlocal+printFieldSize/2) = c;
+    printField.at<Vec3b>(-ylocal+printFieldSize/2, xlocal+printFieldSize/2) = c;
 };
 
 void myPrinter::saveTifFile(){
     Mat picField;
-    int sz = round(printFieldSize*DPI/254.0); //100 is dpi
+    int sz = round(printFieldSize/2.54); //100 is dpi
     resize(printField,picField,Size(sz, sz),0,0);
-    imwrite("tiffile/tiffile.tif",picField);
-    system("python3 tiffile/Tiff.py tiffile.tif");
+    imwrite("tiffile.png",picField);
+    system("python3 tiffile/Tiff.py tiffile.png");
     cout << "saveFile\n";
 }
 
