@@ -37,7 +37,7 @@ cameraX(cameraX), cameraY(cameraY), cameraZ(cameraZ), field(field) {
 };
 
 void myPrinter::update(){
-    cout <<"update 4 " << endl;
+    cout <<"update 5 " << endl;
 }
 string exec(const char* cmd) {
     array<char, 128> buffer;

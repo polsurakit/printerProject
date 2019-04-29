@@ -21,6 +21,10 @@ using namespace std;
 
 
 //var
+std::string INPUT_NAME = "test.jpg";
+std::string OUTPUT_NAME = "algor3_new.jpg";
+int TARGET_H_SIZE = 3000; //0.1 millimeter / pixel
+int TARGET_W_SIZE = 5000; //0.1 millimeter / pixel
 
 myRandom randomGenerator;
 
@@ -47,7 +51,7 @@ void initialize(){
     resize(image,showedImage,Size(smallWindowSize, smallWindowSize),0,0);
     
     cout << 1 ;
-    resize(image,image2,Size(TARGET_H_SIZE, TARGET_W_SIZE),0,0);
+    resize(image,image2,Size(TARGET_W_SIZE, TARGET_H_SIZE),0,0);
     //blur
     if(isBlur){
         blur(image2,image2,Size(50,50));
@@ -71,6 +75,8 @@ void initialize(){
             field.at<Vec3b>(i,j) = Vec3b(255,255,255);
         }
     }
+    //Mat tst;
+    
     cout << "end init" << endl;
 }
 
@@ -198,7 +204,7 @@ bool checkDirection(int i, int j, int direction){
     int movej[4] = {moveStep,0,-moveStep,0};
     if ( i+movei[direction] < 0 || j+movej[direction] < 0) return false;
     if ( i+movei[direction] >= fieldSize || j+movej[direction] >= fieldSize) return false;
-    if ( zone[i+movei[direction]][j+movej[direction]] == 0) return false;
+    if ( zone[j+movej[direction]][i+movei[direction]] == 0) return false;
     return true;
 }
 
@@ -257,16 +263,28 @@ string exec1(const char* cmd) {
     return result;
 }
 
+
+
 int main(int argc, char** argv)
 {
+    if(argc>1){
+        cout << argc << endl;
+        OUTPUT_NAME = argv[1];
+        if (argc > 3){
+            TARGET_H_SIZE = stoi(argv[2]);
+            TARGET_W_SIZE = stoi(argv[3]);
+        }
+    }
     printer.update();
-    cout << TARGET_H_SIZE << " " << TARGET_W_SIZE << endl;
+    cout << OUTPUT_NAME << " " <<  TARGET_H_SIZE << " " << TARGET_W_SIZE << endl;
     initialize();
     printer.getCameraImage();
     // showResult();
     algorithm6();
     cout << "Save file ..." << endl;
-    imwrite(OUTPUT_NAME, field);
+    //cv::Rect myROI(TOPLEFTY, TOPLEFTX, TOPLEFTY+TARGET_H_SIZE, TOPLEFTX+TARGET_W_SIZE);
+    Mat cropedImage = field(Rect(TOPLEFTX,TOPLEFTY,TARGET_W_SIZE,TARGET_H_SIZE));
+    imwrite(OUTPUT_NAME, cropedImage);
     //imwrite("ex_"+OUTPUT_NAME, expectedResult);
     return 0;
 }
@@ -283,9 +301,9 @@ void algorithm6(){
     while(direction <= 3){
         cout << i << " " << j << endl;
         cout << "This step will move to x = " << i << " y = " << j << endl;
-        cout << "If you need to skip type 'skip' and Enter" << endl;
+        if(!isSimulation) cout << "If you need to skip type 'skip' and Enter" << endl;
         string input;
-        cin >> input;
+        if(!isSimulation)  cin >> input;
         if (input == "skip"){
             cout << "Skip this step" << endl;
             printer.getCameraImage();
@@ -354,19 +372,19 @@ void algorithm6(){
                     }else{
 
                         int c1,c2,c0;
-                        if(Y > j && X > j){
+                        if(Y > j && X > i){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][0]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][0]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][0]));
-                        }else if(Y > j && X < j){
+                        }else if(Y > j && X < i){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][1]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][1]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][1]));
-                        }else if(Y < j && X > j){
+                        }else if(Y < j && X > i){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][2]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][2]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][2]));
-                        }else if(Y < j && X < j){
+                        }else if(Y < j && X < i){
                             c0 = min(255,exColor[0]+(int)((255-exColor[0])*zone3[Y][X][3]));
                             c1 = min(255,exColor[1]+(int)((255-exColor[1])*zone3[Y][X][3]));
                             c2 = min(255,exColor[2]+(int)((255-exColor[2])*zone3[Y][X][3]));
@@ -401,7 +419,7 @@ void algorithm6(){
         cout << "go to type on simulation screen\n";
         showResult();
         
-        zone[i][j] = 0;
+        zone[j][i] = 0;
         changeDirection(i, j, direction);
     }
 }
@@ -473,6 +491,10 @@ void fillzone3(){
                     zone3[i+k][j+l].push_back(3*w2/w);
                     zone3[i+k][j+l].push_back(3*w3/w);
                     zone3[i+k][j+l].push_back(3*w4/w);
+//                  0 -> top left
+//                  1 -> top right
+//                  2 -> bot left
+//                  3 -> bot right
                 }
                 if(zone[i+k][j]==0) break;
             }
