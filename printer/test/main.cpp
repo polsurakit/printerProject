@@ -75,8 +75,6 @@ void initialize(){
             field.at<Vec3b>(i,j) = Vec3b(255,255,255);
         }
     }
-    //Mat tst;
-    
     cout << "end init" << endl;
 }
 

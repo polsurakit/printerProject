@@ -86,10 +86,10 @@ def getControllerInfo(v,interval,isprint=True):
         else :
             cz += 1
         m1 = max(std)
-        
-        if m1 < 0.0001:
+        print(m1)
+        if m1 < 0.0002:
 
-            if cx > 120 and cy > 120 and cz > 120:
+            if cx > 10 and cy > 10 and cz > 10:
                 return rearrange(s,n)
             elif isprint:
                 print(s[3]/n, s[7]/n, s[11]/n, cx, cy, cz)
@@ -154,7 +154,7 @@ def invMatrix(a):
     return np.linalg.inv(a)
 
 v = triad_openvr.triad_openvr()
-# v.print_discovered_objects()
+v.print_discovered_objects()
 interval = 1/100
 
 if len(sys.argv) > 1:
@@ -181,9 +181,10 @@ print("Please select the mode")
 print("0: print raw data")
 print("1: full calibration (M,t,R)")
 print("2: position calibration (M)")
-print("3: rotation calibration (R,t)")
-print("4: print data in our system")
-print("5: get data")
+print("3: rotation calibration R")
+print("4: origin calibration t")
+print("5: print data in our system")
+print("6: get data")
 print("--------------------------------")
 
 mode = int(input())
@@ -408,6 +409,18 @@ elif mode == 3:
     #save rot
     saveRotationMatrix(origin[:3])
 
+    print("Finished calibration")
+
+elif mode == 4:
+    #rot calibration and save
+    #requires 1 move with correct rotation
+    print("move printer to the origin")
+    print("Press ENTER after finished moving")
+    input()
+    origin = getControllerInfo(v,interval)
+
+    #save rot
+
     [M,t] = loadSystemMatrix()
     M = np.array(M)
 
@@ -419,7 +432,7 @@ elif mode == 3:
 
     print("Finished calibration")
 
-elif mode == 4:
+elif mode == 5:
     #review pos and angel in our system
     #compare to information of M,t,first rotation in our file
     #infinity call
@@ -480,7 +493,7 @@ elif mode == 4:
 
 
 
-elif mode == 5:
+elif mode == 6:
     #get position and angle in our system as string
     #one call
     rot = invMatrix(np.array(loadRotationMatrix()))
