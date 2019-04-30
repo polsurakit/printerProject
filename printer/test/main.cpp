@@ -19,6 +19,76 @@ using namespace std;
 #include <map>
 #include "constant.cpp"
 
+#include "opencv2/aruco.hpp" 
+
+string type2str(int type) {
+  string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+
+  return r;
+}
+
+void testaluco(){
+    cv::Mat markerImage; 
+    cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+ 
+    cv::aruco::drawMarker(dictionary, 23, 200, markerImage, 1);
+    // Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0));
+    Mat g(300,300,CV_8UC3,Vec3b(255,255,255));
+
+    for(int i = 0 ; i < 200 ; i++){
+        for(int j = 0 ; j < 200 ; j++){
+            if((int)markerImage.at<uchar>(i,j)==0){
+                g.at<Vec3b>(i+50,j+50) = Vec3b(0,0,0);
+            }
+            // cout << (int)markerImage.at<unsigned char>(i,j) << " ";
+        }
+        // cout << endl;
+    }
+
+    imshow( "Display window", g);
+    waitKey(0);
+    imshow( "Display window", markerImage);
+    waitKey(0);
+
+    cv::Mat inputImage = markerImage;
+    vector< int > markerIds; 
+    vector< vector<Point2f> > markerCorners, rejectedCandidates; 
+    cv::Ptr<cv::aruco::DetectorParameters> parameters; 
+    cout <<"ddd" << endl;
+    cv::aruco::detectMarkers(g, dictionary, markerCorners, markerIds);
+    cout << 123123123 << endl;
+    cv::aruco::drawDetectedMarkers(g, markerCorners, markerIds);
+    cout << 123123123 << endl;
+    for (int i = 0 ; i < markerCorners.size() ; i++){
+        cout << markerCorners.size() << " " << markerCorners[i].size() << endl;
+        for(int j = 0 ; j < markerCorners[i].size() ; j++){
+            cout << markerCorners[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << markerIds.size() << " " << markerIds[0] << endl;
+    imshow( "Display window", g);
+    waitKey(0);
+
+}
+
 
 //var
 std::string INPUT_NAME = "test.jpg";
@@ -265,6 +335,8 @@ string exec1(const char* cmd) {
 
 int main(int argc, char** argv)
 {
+    testaluco();
+    return 0;
     if(argc>1){
         cout << argc << endl;
         OUTPUT_NAME = argv[1];
