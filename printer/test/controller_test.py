@@ -56,6 +56,7 @@ def getControllerInfo(v,interval,isprint=True):
         #return rearrange(s)
         std = [0]*12
         isP = True
+        # return rearrange(s,n)
         for i in range(12):
             for j in range(n):
                 std[i] += (float(s[i])/n-float(x[j][i//4][i%4]))**2
@@ -64,6 +65,10 @@ def getControllerInfo(v,interval,isprint=True):
         std[3] = 0
         std[7] = 0
         std[11] = 0
+        m1 = max(std)
+        # print(m1)
+        if m1 < 0.0001:
+            return rearrange(s,n)
         x = s[3]/n
         y = s[7]/n
         z = s[11]/n
@@ -87,7 +92,7 @@ def getControllerInfo(v,interval,isprint=True):
             cz += 1
         m1 = max(std)
         print(m1)
-        if m1 < 0.0002:
+        if m1 < 0.0001:
 
             if cx > 10 and cy > 10 and cz > 10:
                 return rearrange(s,n)
@@ -191,14 +196,14 @@ mode = int(input())
 
 if mode == 0:
     #review raw data
-    while(True):
-        g = getControllerInfo(v,interval)
-        txt = ''
-        for x in g:
-            for y in x:
-                txt += str(y) + ' '
-        print(txt)
-        print('@@@@@@@@@@@@@@@@@@@@@@@@')
+    while True:
+        x = v.devices["controller_1"].get_pose()
+        start = time.time()
+        
+        sleep_time = interval-(time.time()-start)
+        print(x[0][3]*10000,x[1][3]*10000,x[2][3]*10000)
+        if sleep_time>0:
+            time.sleep(2)
 
 elif mode == 1:
     #full calibration (rot+pos)
