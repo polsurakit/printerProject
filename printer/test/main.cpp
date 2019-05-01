@@ -335,8 +335,8 @@ string exec1(const char* cmd) {
 
 int main(int argc, char** argv)
 {
-    testaluco();
-    return 0;
+    // testaluco();
+    // return 0;
     if(argc>1){
         cout << argc << endl;
         OUTPUT_NAME = argv[1];

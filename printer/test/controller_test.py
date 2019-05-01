@@ -4,8 +4,8 @@ import sys
 import numpy as np
 import math
 
-RECTANGLE_W = 3040.0        #in 0.1 mm.
-RECTANGLE_H = 3040.0        #in 0.1 mm.
+RECTANGLE_W = 8410.0        #in 0.1 mm.
+RECTANGLE_H = 6100.0        #in 0.1 mm.
 
 ROT_MATRIX_FILENAME = "rotationMatrix.txt"
 SYS_MATRIX_FILENAME = "systemMatrix.txt"
@@ -56,7 +56,7 @@ def getControllerInfo(v,interval,isprint=True):
         #return rearrange(s)
         std = [0]*12
         isP = True
-        # return rearrange(s,n)
+        return rearrange(s,n)
         for i in range(12):
             for j in range(n):
                 std[i] += (float(s[i])/n-float(x[j][i//4][i%4]))**2
@@ -480,8 +480,8 @@ elif mode == 5:
             std[11] = 0
             
             m1 = max(std)
-            
-            if m1 < 0.0001:
+            #print(m1)
+            if m1 < 1:
                 info = rearrange(s,n)
                 break;
 
