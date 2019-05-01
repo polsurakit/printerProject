@@ -5,7 +5,7 @@ import numpy as np
 import math
 
 RECTANGLE_W = 8410.0        #in 0.1 mm.
-RECTANGLE_H = 6100.0        #in 0.1 mm.
+RECTANGLE_H = 3040.0        #in 0.1 mm.
 
 ROT_MATRIX_FILENAME = "rotationMatrix.txt"
 SYS_MATRIX_FILENAME = "systemMatrix.txt"
@@ -159,7 +159,8 @@ def invMatrix(a):
     return np.linalg.inv(a)
 
 v = triad_openvr.triad_openvr()
-v.print_discovered_objects()
+if len(sys.argv)==1:
+    v.print_discovered_objects()
 interval = 1/100
 
 if len(sys.argv) > 1:
