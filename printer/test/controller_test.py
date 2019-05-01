@@ -174,11 +174,14 @@ if len(sys.argv) > 1:
     y = M.dot(np.array([info[3]]).transpose()) - t.transpose()
     rot_mat = np.array(info[:3]).dot(rot)
     yaw = 180 / math.pi * math.atan(rot_mat[1][0] /rot_mat[0][0])
-    pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
+    pitch = math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
     roll = 180 / math.pi * math.atan(rot_mat[2][1] /rot_mat[2][2])
-    
+    a = -250
+    b = 2000
+    y[0][0] = y[0][0] - a + math.cos(pitch)*a - math.sin(pitch)*b
+    y[2][0] = y[2][0] - b + math.sin(pitch)*a + math.cos(pitch)*b
     txt = str(y[0][0]) + ' ' + str(y[1][0]) + ' ' + str(y[2][0])
-    txt += ' ' + str(yaw) + ' ' + str(pitch) + ' ' + str(roll)
+    txt += ' ' + str(yaw) + ' ' + str(pitch*180/math.pi) + ' ' + str(roll)
     print(txt)
     sys.exit()
 
