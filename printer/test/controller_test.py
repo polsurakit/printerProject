@@ -275,11 +275,30 @@ elif mode == 1:
     Ax.append([bl[0]-tr[0], bl[1]-tr[1], bl[2]-tr[2]])
     Ax.append([br[0]-tr[0], br[1]-tr[1], br[2]-tr[2]])
     Ax.append([br[0]-bl[0], br[1]-bl[1], br[2]-bl[2]])
+    print(Ax)
     Ax = np.array(Ax)
     bx = np.array([RECTANGLE_W, RECTANGLE_W, 0, -RECTANGLE_W, 0, RECTANGLE_W])
     M0 = (np.linalg.inv(Ax.transpose().dot(Ax)).dot(Ax.transpose())).dot(bx)
+    print(Ax)
+    print(bx)
     
+    print("old M0")
     print(M0)
+
+    _Ax = []
+    _Ax.append([tr[0]-tl[0], tr[1]-tl[1], tr[2]-tl[2]])
+    _Ax.append([br[0]-tl[0], br[1]-tl[1], br[2]-tl[2]])
+    _Ax.append([bl[0]-tl[0], bl[1]-tl[1], bl[2]-tl[2]])
+    # _Ax.append([bl[0]-tr[0], bl[1]-tr[1], bl[2]-tr[2]])
+    # _Ax.append([br[0]-tr[0], br[1]-tr[1], br[2]-tr[2]])
+    # _Ax.append([br[0]-bl[0], br[1]-bl[1], br[2]-bl[2]])
+    _Ax = np.array(_Ax)
+    _bx = np.array([RECTANGLE_W, RECTANGLE_W, 0])
+    _M0 = (np.linalg.inv(_Ax.transpose().dot(_Ax)).dot(_Ax.transpose())).dot(_bx)
+
+    print("new M0")
+    print(_M0)
+
 
     M1 = np.array([0.,0.,0.])
 
@@ -386,11 +405,29 @@ elif mode == 2:
     Ax.append([bl[0]-tr[0], bl[1]-tr[1], bl[2]-tr[2]])
     Ax.append([br[0]-tr[0], br[1]-tr[1], br[2]-tr[2]])
     Ax.append([br[0]-bl[0], br[1]-bl[1], br[2]-bl[2]])
+    print(Ax)
     Ax = np.array(Ax)
     bx = np.array([RECTANGLE_W, RECTANGLE_W, 0, -RECTANGLE_W, 0, RECTANGLE_W])
     M0 = (np.linalg.inv(Ax.transpose().dot(Ax)).dot(Ax.transpose())).dot(bx)
+    print(Ax)
+    print(bx)
     
+    print("old M0")
     print(M0)
+
+    _Ax = []
+    _Ax.append([tr[0]-tl[0], tr[1]-tl[1], tr[2]-tl[2]])
+    _Ax.append([br[0]-tl[0], br[1]-tl[1], br[2]-tl[2]])
+    _Ax.append([bl[0]-tl[0], bl[1]-tl[1], bl[2]-tl[2]])
+    # _Ax.append([bl[0]-tr[0], bl[1]-tr[1], bl[2]-tr[2]])
+    # _Ax.append([br[0]-tr[0], br[1]-tr[1], br[2]-tr[2]])
+    # _Ax.append([br[0]-bl[0], br[1]-bl[1], br[2]-bl[2]])
+    _Ax = np.array(_Ax)
+    _bx = np.array([RECTANGLE_W, RECTANGLE_W, 0])
+    _M0 = (np.linalg.inv(_Ax.transpose().dot(_Ax)).dot(_Ax.transpose())).dot(_bx)
+
+    print("new M0")
+    print(_M0)
 
     M1 = np.array([0.,0.,0.])
 
