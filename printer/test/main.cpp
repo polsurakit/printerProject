@@ -67,7 +67,7 @@ void testaluco(){
     imshow( "Display window", markerImage);
     waitKey(0);
 
-    cv::Mat inputImage = markerImage;
+    g = imread("IMG_7242.JPG");
     vector< int > markerIds; 
     vector< vector<Point2f> > markerCorners, rejectedCandidates; 
     cv::Ptr<cv::aruco::DetectorParameters> parameters; 
@@ -84,7 +84,21 @@ void testaluco(){
         cout << endl;
     }
     cout << markerIds.size() << " " << markerIds[0] << endl;
-    imshow( "Display window", g);
+    Mat show;
+    resize(g,show,Size(1000, 1000),0,0);
+
+    imshow( "Display window", show);
+    waitKey(0);
+
+}
+
+void test2(){
+    cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+    cv::Ptr<cv::aruco::GridBoard> board = cv::aruco::GridBoard::create(5, 7, 0.04, 0.01, dictionary);
+    cv::Mat boardImage;
+    board->draw( cv::Size(1800, 1500), boardImage, 10, 1 );
+    imwrite("aruco.jpg", boardImage);
+    imshow( "Display window", boardImage);
     waitKey(0);
 
 }
@@ -335,8 +349,9 @@ string exec1(const char* cmd) {
 
 int main(int argc, char** argv)
 {
-    // testaluco();
-    // return 0;
+    testaluco();
+    // test2();
+    return 0;
     if(argc>1){
         cout << argc << endl;
         OUTPUT_NAME = argv[1];

@@ -4,7 +4,7 @@
 
 
 
-const bool isSimulation = false;
+const bool isSimulation = true;
 
 
 const int DPI = 100;
