@@ -139,7 +139,10 @@ void loadMarkerData(){
 
 Mat getPicture(){
     VideoCapture cap;
+
     cap.open(0);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3264); // valueX = your wanted width 
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2448); // valueY = your wanted heigth
     Mat frame;
     cap >> frame;
     return frame;
@@ -457,10 +460,7 @@ string exec1(const char* cmd) {
 
 int main(int argc, char** argv)
 {
-    Mat p = getPicture();
-    imshow( "Display window", p);
-    waitKey(0);
-    return 0;
+    
     
     if(argc>1){
         cout << argc << endl;
