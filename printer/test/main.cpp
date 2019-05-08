@@ -44,9 +44,11 @@ string type2str(int type) {
   return r;
 }
 
+cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+
 void testaluco(){
     cv::Mat markerImage; 
-    cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+    // cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
  
     cv::aruco::drawMarker(dictionary, 23, 200, markerImage, 1);
     // Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0));
@@ -101,6 +103,116 @@ void test2(){
     imshow( "Display window", boardImage);
     waitKey(0);
 
+}
+
+map<int,double> markerPosXs;
+map<int,double> markerPosYs;
+map<int,double> markerThetas;
+
+void loadMarkerData(){
+    ifstream myReadFile;
+    myReadFile.open("test.txt");
+    string output;
+    vector<double> v(3);
+    int idx = -1;
+    int id;
+    if (myReadFile.is_open()) {
+        while (!myReadFile.eof()) {
+            myReadFile >> output;
+            if (idx==-1){
+                id = stoi(output);
+                idx++;
+            }else if (idx < 3){
+                v[idx] = stod(output);
+                idx++;
+            }else{
+                markerPosXs[id] = v[0];
+                markerPosYs[id] = v[1];
+                markerThetas[id] = v[2];
+                id = stoi(output);
+                idx = 0;
+            }
+        }
+    }
+    myReadFile.close();
+}
+
+Mat getPicture(){
+    VideoCapture cap;
+    cap.open(0);
+    Mat frame;
+    cap >> frame;
+    return frame;
+}
+
+double distancePoint2f(Point2f p1, Point2f p2){
+    return sqrt((p1.y-p2.y)*(p1.y-p2.y)+(p1.x-p2.x)*(p1.x-p2.x));
+}
+
+double cameraW = 1000;
+double cameraH = 1000; // in 0.1mm.
+double cameraOffsetX = 10;
+double cameraOffsetY = 10;
+
+vector<double> getposition(){
+    vector<double> result;
+    Mat pic = getPicture();
+    vector< int > markerIds; 
+    vector< vector<Point2f> > markerCorners, rejectedCandidates; 
+    cv::Ptr<cv::aruco::DetectorParameters> parameters;
+    cv::aruco::detectMarkers(pic, dictionary, markerCorners, markerIds);
+    int r = pic.rows;
+    int c = pic.cols;
+    if (markerIds.size() == 0){
+        cout << "No marker detected\n";
+        imshow( "Display window", pic);
+        waitKey(0);
+        return result;
+    }
+    int id = markerIds[0];
+    Point2f corner = markerCorners[0][0];
+    Point2f lastcorner = markerCorners[0][3];
+    double distanceToMid = distancePoint2f(Point2f(c/2,r/2), corner);
+    for(int i = 1 ; i < markerIds.size() ; i++){
+        double newdist = distancePoint2f(markerCorners[i][0],Point2f(c/2,r/2));
+        if (newdist < distanceToMid){
+            id = markerIds[i];
+            corner = markerCorners[i][0];
+            lastcorner = markerCorners[i][3];
+            distanceToMid = newdist;
+        }
+    }
+    double markerGlobalPosX = markerPosXs[id];
+    double markerGlobalPosY = markerPosYs[id];
+    double markerGlobalTheta = markerThetas[id];
+
+    double markerLocalPosX = corner.x;
+    double markerLocalPosY = corner.y;
+    double markerLocalTheta = atan((corner.x-lastcorner.x)/(corner.y-lastcorner.y));
+
+    double diffTheta = markerGlobalTheta - markerLocalTheta;
+
+    double cameraToMarkerX = (c/2 - markerLocalPosX)*cameraW;
+    double cameraToMarkerY = (r/2 - markerLocalPosY)*cameraH;
+
+    double cameraToMarkerXGlobal = cos(diffTheta)*cameraToMarkerX - sin(diffTheta)*cameraToMarkerY;///////
+    double cameraToMarkerYGlobal = sin(diffTheta)*cameraToMarkerX + cos(diffTheta)*cameraToMarkerY;
+
+    double cameraGlobalPosX = markerGlobalPosX + cameraToMarkerXGlobal;
+    double cameraGlobalPosY = markerGlobalPosY + cameraToMarkerYGlobal;
+    double cameraGlobalTheta = -diffTheta;
+
+    double printerToCameraXGlobal = cos(cameraGlobalTheta)*cameraOffsetX + sin(cameraGlobalTheta)*cameraOffsetY;
+    double printerToCameraYGlobal = -sin(cameraGlobalTheta)*cameraOffsetX + cos(cameraGlobalTheta)*cameraOffsetY;
+
+    double printerGlobalPosX = cameraGlobalPosX + printerToCameraXGlobal;
+    double printerGlobalPosY = cameraGlobalPosY + printerToCameraYGlobal;
+
+    result.push_back(printerGlobalPosX);
+    result.push_back(printerGlobalPosY);
+    result.push_back(cameraGlobalTheta);
+
+    return result;
 }
 
 
@@ -310,24 +422,20 @@ void changeDirection(int &i, int &j, int &direction){
     }
 }
 
-int checkCase2(int y, int x, int py, int px){
-    for(int i = firstPosition+printFieldSize/2-(printFieldSize-moveStep) ; i < fieldSize-TOPLEFTY ; i+=moveStep){
-        if(i <= y && y < i+printFieldSize-moveStep){
-            if(py > y){
-                return 1;
-            }else{
-                return 0;
-            }
+int checkCase2(int printy, int printx, int expy, int expx){
+    int c;
+    if (printx < expx - (moveStep-printFieldSize/2) && printy < expy + (moveStep-printFieldSize/2)) c = 1;
+    else if (printx >= expx + (moveStep-printFieldSize/2) && printy >= expy + (moveStep-printFieldSize/2)) c = 1;
+    else if (printx < expx + (moveStep-printFieldSize/2) && printy < expy - (moveStep-printFieldSize/2))
+        c = 1;
+    else c = 0;
+    if (zone3[printy][printx].size()>2){
+        if (TOPLEFTY+TARGET_H_SIZE-printy < TOPLEFTX+TARGET_W_SIZE-printx){
+            return abs(c-1);
         }
-        if(i <= x && x < i+printFieldSize-moveStep){
-            if(px > x){
-                return 1;
-            }else{
-                return 0;
-            }
-        }
+        return abs(c-1)+2;
     }
-    return 0;
+    return c;
 }
 
 void algorithm6();
@@ -349,9 +457,11 @@ string exec1(const char* cmd) {
 
 int main(int argc, char** argv)
 {
-    testaluco();
-    // test2();
+    Mat p = getPicture();
+    imshow( "Display window", p);
+    waitKey(0);
     return 0;
+    
     if(argc>1){
         cout << argc << endl;
         OUTPUT_NAME = argv[1];
@@ -447,11 +557,19 @@ void algorithm6(){
                 if(z!=1) {
                     if(z==2){
                         //print outside wrong
-                        int c = checkCase2(Y,X,(int)pos[1], (int)pos[0]);
+                        int c = checkCase2(Y,X,j, i);
+                        // if ()
                         int c0,c1,c2;
                         c0 = exColor[0]+(int)((255-exColor[0])*zone3[Y][X][c]);
                         c1 = exColor[1]+(int)((255-exColor[1])*zone3[Y][X][c]);
                         c2 = exColor[2]+(int)((255-exColor[2])*zone3[Y][X][c]);
+                        // c0 = 0;
+                        // c1 = 0;
+                        // c2 = 0;
+                        // if (c==1){
+                        //     c0 = 128;;
+                        // }else c1 = 128;
+
                         color = Vec3b(c0,c1,c2);
                         
                     }else{
@@ -537,9 +655,11 @@ void fillzone3(){
                 continue;
             }
             if(zone[i][j]==0) break;
+            if(zone[i][j]==1) continue;
             for(int k = 0 ; k < a ; k++){
                 double w1 = (k+1);
                 double w2 = (a-k);
+                // field.at<Vec3b>(i,j+k) = Vec3b(64,0,0);
                 zone3[i][j+k].push_back(w1/(w1+w2));
                 zone3[i][j+k].push_back(w2/(w1+w2));
             }
@@ -553,11 +673,16 @@ void fillzone3(){
                 continue;
             }
             if(zone[i][j]==0) break;
+            if(zone[i][j]==1) continue;
+
             for(int k = 0 ; k < a ; k++){
                 double w1 = (k+1);
                 double w2 = (a-k);
+                // field.at<Vec3b>(i+k,j) = Vec3b(0,64,0);
+                // if(zone3[i+k][j].size()==2) field.at<Vec3b>(i+k,j) = Vec3b(64,64,0);
                 zone3[i+k][j].push_back(w1/(w1+w2));
                 zone3[i+k][j].push_back(w2/(w1+w2));
+                // if(zone3[i+k][j].size()==4) cout << "!";
             }
         }
     }
