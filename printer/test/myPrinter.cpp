@@ -19,14 +19,24 @@
 
 using namespace std;
 
+myPrinter::myPrinter(){};
+
 myPrinter::myPrinter(double cameraX, double cameraY, double cameraZ, Mat field) :
 cameraX(cameraX), cameraY(cameraY), cameraZ(cameraZ), field(field) {
     update();
     cout << isSimulation << endl;
     printField = Mat(printSize,printSize,CV_8UC3,Vec3b(255,255,255));
     vector<double> result;
-    if (!isSimulation) result = getPosition();
+    if (!isSimulation) {
+        if(!isAruco) result = getPosition();
+        else {
+            result.push_back(1000);
+        result.push_back(1000);
+        result.push_back(0);
+        }
+    }
     else{
+        cout << "aaa" ;
         result.push_back(1000);
         result.push_back(1000);
         result.push_back(0);
@@ -34,6 +44,7 @@ cameraX(cameraX), cameraY(cameraY), cameraZ(cameraZ), field(field) {
     x = result[0];
     y = result[1];
     theta = result[2]/180*M_PI;
+    update();
 };
 
 void myPrinter::update(){
@@ -211,7 +222,12 @@ void myPrinter::print(){
     cin  >> s;
 }
 
-void myPrinter::getCameraImage(){
+void myPrinter::getCameraImage(VideoCapture cap){
+    if (!isSimulation && isAruco){
+        cout << "aruco camera" << endl;
+        cap >> cameraImage;
+        return ;
+    }
     cameraImage = camera.getImage(x+cameraX, y+cameraY, theta, field);
 };
 

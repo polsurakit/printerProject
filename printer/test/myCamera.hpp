@@ -22,6 +22,7 @@ public:
     int rowSize = 2000;
     int colSize = 2000;
     Mat getImage(double x, double y, double theta, Mat field);
+
 };
 
 

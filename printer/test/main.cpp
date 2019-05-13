@@ -21,6 +21,28 @@ using namespace std;
 
 #include "opencv2/aruco.hpp" 
 
+//var
+std::string INPUT_NAME = "test.jpg";
+std::string OUTPUT_NAME = "algor3_new.jpg";
+int TARGET_H_SIZE = 2700; //0.1 millimeter / pixel
+int TARGET_W_SIZE = 3700; //0.1 millimeter / pixel
+
+myRandom randomGenerator;
+
+Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0)); //0.1 millimeter / pixel
+
+vector<vector<int> > zone;
+vector<vector<int> > zone2;
+vector<vector<vector<double> > > zone3;
+myPrinter printer(0,0,0,field);
+
+Mat image;
+Mat image2;
+Mat showedImage;
+Mat expectedImage;
+Mat expectedResult;
+
+
 string type2str(int type) {
   string r;
 
@@ -44,7 +66,10 @@ string type2str(int type) {
   return r;
 }
 
+Mat polpolpol(Mat im);
+
 cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+VideoCapture cap;
 
 void testaluco(){
     cv::Mat markerImage; 
@@ -111,7 +136,7 @@ map<int,double> markerThetas;
 
 void loadMarkerData(){
     ifstream myReadFile;
-    myReadFile.open("test.txt");
+    myReadFile.open("aruco.txt");
     string output;
     vector<double> v(3);
     int idx = -1;
@@ -126,8 +151,8 @@ void loadMarkerData(){
                 v[idx] = stod(output);
                 idx++;
             }else{
-                markerPosXs[id] = v[0];
-                markerPosYs[id] = v[1];
+                markerPosXs[id] = v[1];
+                markerPosYs[id] = v[0];
                 markerThetas[id] = v[2];
                 id = stoi(output);
                 idx = 0;
@@ -137,33 +162,97 @@ void loadMarkerData(){
     myReadFile.close();
 }
 
-Mat getPicture(){
-    VideoCapture cap;
+void printMarkerData(){
+    for(auto it = markerPosXs.begin() ; it != markerPosXs.end() ; it++){
+        int id = it->first;
+        cout << id << " " << markerPosXs[id] << " " << markerPosYs[id] << " " << markerThetas[id] << endl;
+    }
+}
 
-    cap.open(0);
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 3264); // valueX = your wanted width 
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2448); // valueY = your wanted heigth
-    Mat frame;
+Mat testundist(Mat in){
+
+    Mat cam(cv::Size(3, 3), CV_64FC1);
+
+    cam.at<double>(0,0) = 2.68566643e+03;
+    cam.at<double>(0,1) = 0.00000000e+00;
+    cam.at<double>(0,2) = 1.76025212e+03;
+    cam.at<double>(1,0) = 0.00000000e+00;
+    cam.at<double>(1,1) = 2.68566643e+03;
+    cam.at<double>(1,2) = 1.32815535e+03;
+    cam.at<double>(2,0) = 0.00000000e+00;
+    cam.at<double>(2,1) = 0.00000000e+00;
+    cam.at<double>(2,2) = 1.00000000e+00;
+
+    Mat dist(cv::Size(1, 8), CV_64FC1);
+    dist.at<double>(0,0) = 1.45252895e+01;
+    dist.at<double>(0,1) = 4.36753815e+00;
+    dist.at<double>(0,2) = 2.45529062e-03;
+    dist.at<double>(0,3) = 8.76449085e-04;
+    dist.at<double>(0,4) =-5.38246708e+01;
+    dist.at<double>(0,5) = 1.44956654e+01;
+    dist.at<double>(0,6) = 4.93164447e+00;
+    dist.at<double>(0,7) =-5.45507391e+01;
+
+
+    // Mat in,out,out2;
+    // in = imread("../../cameracalibration/pic/1.jpg");
+    // cout << in.cols << " " << in.rows << endl;
+    // resize(in,out2,Size(800, 600),0,0);
+    // imshow( "Display window", out2);
+    // waitKey(0);
+    Mat out;
+    undistort(in, out, cam, dist);
+    
+    // resize(out,out2,Size(800, 600),0,0);
+    // imshow( "Display window", out2);
+    // waitKey(0);
+    return out;
+}
+
+Mat getPicture(){
+    Mat frame,frame3;
+    while(true){
+        cap >> frame;
+        frame3 = testundist(frame);
+
+        Mat frame2;
+        frame2 = polpolpol(frame3);
+        resize(frame,frame2,Size(800,600),0,0);
+        int x = waitKey(30);
+        imshow( "Display window", frame2);
+        if (x==100) break;
+    }
     cap >> frame;
-    return frame;
+    return testundist(frame);
 }
 
 double distancePoint2f(Point2f p1, Point2f p2){
     return sqrt((p1.y-p2.y)*(p1.y-p2.y)+(p1.x-p2.x)*(p1.x-p2.x));
 }
 
-double cameraW = 1000;
-double cameraH = 1000; // in 0.1mm.
-double cameraOffsetX = 10;
-double cameraOffsetY = 10;
+double cameraW = 2400;
+double cameraH = 1920; // in 0.1mm.
+double cameraOffsetX = -100;
+double cameraOffsetY = -1213;
 
 vector<double> getposition(){
     vector<double> result;
-    Mat pic = getPicture();
+    Mat pic5 = getPicture();
+    Mat pic = polpolpol(pic5);
+    int ox = 1037;
+    int oy = 562;
+
     vector< int > markerIds; 
     vector< vector<Point2f> > markerCorners, rejectedCandidates; 
     cv::Ptr<cv::aruco::DetectorParameters> parameters;
     cv::aruco::detectMarkers(pic, dictionary, markerCorners, markerIds);
+    cv::aruco::drawDetectedMarkers(pic, markerCorners, markerIds);
+    Mat pic2;
+    resize(pic,pic2,Size(800, 600),0,0);
+
+    imshow( "Display window", pic2);
+    waitKey(0);
+
     int r = pic.rows;
     int c = pic.cols;
     if (markerIds.size() == 0){
@@ -175,7 +264,7 @@ vector<double> getposition(){
     int id = markerIds[0];
     Point2f corner = markerCorners[0][0];
     Point2f lastcorner = markerCorners[0][3];
-    double distanceToMid = distancePoint2f(Point2f(c/2,r/2), corner);
+    double distanceToMid = distancePoint2f(Point2f(ox,oy), corner);
     for(int i = 1 ; i < markerIds.size() ; i++){
         double newdist = distancePoint2f(markerCorners[i][0],Point2f(c/2,r/2));
         if (newdist < distanceToMid){
@@ -185,62 +274,78 @@ vector<double> getposition(){
             distanceToMid = newdist;
         }
     }
+
     double markerGlobalPosX = markerPosXs[id];
     double markerGlobalPosY = markerPosYs[id];
     double markerGlobalTheta = markerThetas[id];
 
+    cout << id << " " << markerGlobalPosX << " " << markerGlobalPosY << " " << markerGlobalTheta << " " << markerGlobalTheta*180/M_PI << endl;
+
     double markerLocalPosX = corner.x;
     double markerLocalPosY = corner.y;
+    cout << "corner\n" << corner << endl << lastcorner << endl;
     double markerLocalTheta = atan((corner.x-lastcorner.x)/(corner.y-lastcorner.y));
 
-    double diffTheta = markerGlobalTheta - markerLocalTheta;
+    cout << "r,c " << r << " " << c << endl;
+    cout << "markerLocalPosX " << markerLocalPosX << "\nmarkerLocalPosY " << markerLocalPosY << endl;
+    cout << "markerLocaltheta " << markerLocalTheta << endl;
+    cout << "markerGlobaltheta " << markerGlobalTheta << endl;
+    double diffTheta = markerLocalTheta - markerGlobalTheta;
+    cout << "difftheta " << diffTheta << endl;
 
-    double cameraToMarkerX = (c/2 - markerLocalPosX)*cameraW;
-    double cameraToMarkerY = (r/2 - markerLocalPosY)*cameraH;
+    double cameraToMarkerX = (ox - markerLocalPosX);
+    double cameraToMarkerY = (oy - markerLocalPosY);
+
+    cout << "cameraToMarkerX " << cameraToMarkerX << endl;
+    cout << "cameraToMarkerY " << cameraToMarkerY << endl;
 
     double cameraToMarkerXGlobal = cos(diffTheta)*cameraToMarkerX - sin(diffTheta)*cameraToMarkerY;///////
     double cameraToMarkerYGlobal = sin(diffTheta)*cameraToMarkerX + cos(diffTheta)*cameraToMarkerY;
 
     double cameraGlobalPosX = markerGlobalPosX + cameraToMarkerXGlobal;
     double cameraGlobalPosY = markerGlobalPosY + cameraToMarkerYGlobal;
-    double cameraGlobalTheta = -diffTheta;
 
-    double printerToCameraXGlobal = cos(cameraGlobalTheta)*cameraOffsetX + sin(cameraGlobalTheta)*cameraOffsetY;
-    double printerToCameraYGlobal = -sin(cameraGlobalTheta)*cameraOffsetX + cos(cameraGlobalTheta)*cameraOffsetY;
+    double cameraGlobalTheta = diffTheta;
+
+    cout << "cameraGlobalPosX " << cameraGlobalPosX << endl;
+    cout << "cameraGlobalPosY " << cameraGlobalPosY << endl;
+    cout << "cameraGlobalTheta " << cameraGlobalTheta << " " << cameraGlobalTheta*180/M_PI << endl;
+
+    double printerToCameraXGlobal = cos(cameraGlobalTheta)*cameraOffsetX - sin(cameraGlobalTheta)*cameraOffsetY;
+    double printerToCameraYGlobal = sin(cameraGlobalTheta)*cameraOffsetX + cos(cameraGlobalTheta)*cameraOffsetY;
+    // cout << "printerToCameraXGlobal " << printerToCameraXGlobal << end;
+    // cout << "printerToCameraYGlobal " << printerToCameraYGlobal << end;
+
+    double cameraThetaOffset = atan(45.0/1495.0);//
 
     double printerGlobalPosX = cameraGlobalPosX + printerToCameraXGlobal;
     double printerGlobalPosY = cameraGlobalPosY + printerToCameraYGlobal;
 
     result.push_back(printerGlobalPosX);
     result.push_back(printerGlobalPosY);
-    result.push_back(cameraGlobalTheta);
+    result.push_back(-cameraGlobalTheta + cameraThetaOffset);
 
+    printer.x = result[0];
+    printer.y = result[1];
+    printer.theta = result[2];
+
+    cout << "last position " << result[0] << " " << result[1] << " " << result[2] << " " << result[2]*180/M_PI << endl;
     return result;
 }
 
 
-//var
-std::string INPUT_NAME = "test.jpg";
-std::string OUTPUT_NAME = "algor3_new.jpg";
-int TARGET_H_SIZE = 3000; //0.1 millimeter / pixel
-int TARGET_W_SIZE = 5000; //0.1 millimeter / pixel
 
-myRandom randomGenerator;
-
-Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0)); //0.1 millimeter / pixel
-
-vector<vector<int> > zone;
-vector<vector<int> > zone2;
-vector<vector<vector<double> > > zone3;
-myPrinter printer(0,0,0,field);
-
-Mat image;
-Mat image2;
-Mat showedImage;
-Mat expectedImage;
-Mat expectedResult;
 
 void initialize(){
+    if (!isSimulation && isAruco){
+        cout << "aruco mode\n";
+        loadMarkerData();
+        printMarkerData();
+        cap.open(0);
+        cap.set(cv::CAP_PROP_FRAME_WIDTH, 3264); // valueX = your wanted width 
+        cap.set(cv::CAP_PROP_FRAME_HEIGHT, 2448); // valueY = your wanted heigth
+    }
+    
     image = imread(INPUT_NAME);
     if(! image.data )                              // Check for invalid input
     {
@@ -292,7 +397,7 @@ void showResult(){
         }
     }
     double theta = printer.theta;
-    cout << "theta = " << theta << endl;
+    cout << "theta = " << theta << " " << theta*180/M_PI<< endl;
     //plot camera line =
     for(int i = -printer.camera.rowSize/2 ; i < printer.camera.rowSize/2 ; i++){
          int j = -printer.camera.colSize/2;
@@ -396,33 +501,79 @@ void showResult(){
 
 void fillzone3();
 
+vector<pair<int,int> > drt;
+
+void filldrt(){
+    int t = 0;
+    vector<pair<int,int> > drt2;
+    for(int i = firstPosition ; i < BOTTOMRIGHTY ; i+=moveStep){
+        if(t%2==1){
+            drt2.resize(0);
+        }
+        for(int j = firstPosition ; j < BOTTOMRIGHTX ; j+=moveStep){
+            if(t%2==0)drt.push_back(make_pair(i,j));
+            else drt2.push_back(make_pair(i,j));
+            if(TARGET_W_SIZE+TOPLEFTX <= j + 2*printFieldSize/5) {break;}
+        }
+        if(t%2==1){
+            for(int j = 0 ; j < drt2.size() ; j++) drt.push_back(drt2[drt2.size()-1-j]);
+        }
+        t+=1;
+        if(TARGET_H_SIZE+TOPLEFTY <= i + 2*printFieldSize/5) {break;}
+    }
+    cout << "drt\n";
+    for(int i = 0 ; i < drt.size() ; i++){
+        cout << drt[i].first << " " << drt[i].second << endl;
+    }
+}
+
 bool checkDirection(int i, int j, int direction){
-    int movei[4] = {0,moveStep,0,-moveStep};
-    int movej[4] = {moveStep,0,-moveStep,0};
-    if ( i+movei[direction] < 0 || j+movej[direction] < 0) return false;
-    if ( i+movei[direction] >= fieldSize || j+movej[direction] >= fieldSize) return false;
-    if ( zone[j+movej[direction]][i+movei[direction]] == 0) return false;
+    int movej[4] = {0,moveStep,0,moveStep};
+    int movei[4] = {moveStep,0,-moveStep,0};
+    if ( i+movei[direction] < 0 || j+movej[direction] < 0) {cout << "da\n";  return false;}
+    if ( i+movei[direction] >= fieldSize || j+movej[direction] >= fieldSize) {cout << "db\n"; return false;}
+    if ( zone[j+movej[direction]][i+movei[direction]] == 0) {cout << "dc\n"; return false;}
     return true;
 }
 
 void changeDirection(int &i, int &j, int &direction){
-    int movei[4] = {0,moveStep,0,-moveStep};
-    int movej[4] = {moveStep,0,-moveStep,0};
-    int cnt = 0;
-    while(cnt < 4){
-        if (checkDirection(i, j, direction)){
-            break;
-        }else{
-            direction += 1;
-            direction %= 4;
-            cnt++;
+    for(int ii = 0 ; ii < drt.size() ; ii++){
+        //cout << "changedrt " << ii << " " << drt[ii].first << " " << drt[ii].second << " " << i << " " << j << endl;
+        if(drt[ii].first == j && drt[ii].second == i){
+            int k = ii+1;
+            if(k == drt.size()){
+                direction = 4;
+                return;
+            }else{
+                j = drt[k].first;
+                i = drt[k].second;
+                return;
+            }
         }
     }
-    if(cnt==4) direction = 4;
-    else{
-        i += movei[direction];
-        j += movej[direction];
-    }
+    // cout << zone[2050][2050] << " z\n";
+    // if(direction == 1) direction = 2;
+    // if(direction == 3) direction = 0;
+    // int movej[4] = {0,moveStep,0,moveStep};
+    // int movei[4] = {moveStep,0,-moveStep,0};
+    // int cnt = 0;
+    // while(cnt < 4){
+    //     cout << i << " " << j << " " << direction << endl;
+    //     if (checkDirection(i, j, direction)){
+    //         break;
+    //     }else{
+    //         direction += 1;
+    //         direction %= 4;
+    //         cnt++;
+    //     }
+    // }
+    //     cout << i << " " << j << " " << direction << endl;
+
+    // if(cnt==4) direction = 4;
+    // else{
+    //     i += movei[direction];
+    //     j += movej[direction];
+    // }
 }
 
 int checkCase2(int printy, int printx, int expy, int expx){
@@ -443,37 +594,73 @@ int checkCase2(int printy, int printx, int expy, int expx){
 
 void algorithm6();
 
-string exec1(const char* cmd) {
-    array<char, 128> buffer;
-    string result;
-    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
-}
 
+
+Mat pertransform;
+void polpol(){
+    Mat pol2 = imread("q.jpg");
+    Mat pol = testundist(pol2);
+    cout << "yy" << endl;
+    vector< int > markerIds; 
+    vector< vector<Point2f> > markerCorners, rejectedCandidates; 
+    cv::aruco::detectMarkers(pol, dictionary, markerCorners, markerIds);
+    cout << "asdfsdf" << endl;
+    
+    cout <<"xx";
+    int first = 3;
+    int old = -1;
+    map<int,int> m;
+    for(int i = 0 ; i < markerIds.size() ; i++) m[markerIds[i]]=i;
+    vector<int> sindex;
+    Point2f src[4];
+    int i = 0 ;
+    for(auto it = m.begin() ; it != m.end() ; it++){
+        int x = it->first;
+        cout << x << endl;
+        src[i] = markerCorners[it->second][0];
+        i+=1;
+    }
+    Point2f dest[4];
+    dest[0].y = 0; 
+    dest[0].x = 0;
+    dest[1].y = 0; 
+    dest[1].x = 2105;
+    dest[2].y = 1300; 
+    dest[2].x = 2105;
+    dest[3].y = 1300; 
+    dest[3].x = 0; 
+
+    pertransform = getPerspectiveTransform(src, dest);
+}
+//#562,1037
+Mat polpolpol(Mat im){
+    Mat dst;
+    warpPerspective(im,dst,pertransform,Size(2105,1300));
+    return dst;
+}
 
 
 int main(int argc, char** argv)
 {
-    
-    
-    if(argc>1){
-        cout << argc << endl;
-        OUTPUT_NAME = argv[1];
-        if (argc > 3){
-            TARGET_H_SIZE = stoi(argv[2]);
-            TARGET_W_SIZE = stoi(argv[3]);
-        }
-    }
+    cout << "main\n";
+    polpol();
+    // testundist();
+    // return 0;
+    // if(argc>1){
+    //     cout << argc << endl;
+    //     OUTPUT_NAME = argv[1];
+    //     if (argc > 3){
+    //         TARGET_H_SIZE = stoi(argv[2]);
+    //         TARGET_W_SIZE = stoi(argv[3]);
+    //     }
+    // }
+    filldrt();
     printer.update();
     cout << OUTPUT_NAME << " " <<  TARGET_H_SIZE << " " << TARGET_W_SIZE << endl;
     initialize();
-    printer.getCameraImage();
+    cout << "bbb1\n";
+    printer.getCameraImage(cap);
+    
     // showResult();
     algorithm6();
     cout << "Save file ..." << endl;
@@ -485,8 +672,11 @@ int main(int argc, char** argv)
 }
 
 void algorithm6(){
+    cout << "algor6 start\n";
     //showResult();
     fillzone3();
+
+
     // showResult();
     cout << "start" << endl;
     int direction = 0;
@@ -501,7 +691,7 @@ void algorithm6(){
         if(!isSimulation)  cin >> input;
         if (input == "skip"){
             cout << "Skip this step" << endl;
-            printer.getCameraImage();
+            printer.getCameraImage(cap);
             cout << "show result" << endl;
             cout << "go to type on simulation screen\n";
             showResult();
@@ -510,14 +700,37 @@ void algorithm6(){
             continue;
         }
         cout << "issim " << isSimulation << endl;
-        if(isSimulation) printer.moveSimulation(i,j);
-        else printer.move(i, j);
-        
-
-        printer.getCameraImage();
         vector<double> pos(3);
-        if(isSimulation) pos = printer.getPositionSimulation(); // x, y, theta
+        if(isSimulation) printer.moveSimulation(i,j);
+        else if(!isAruco)printer.move(i, j);
         else{
+            while(true){
+                // printer.getCameraImage(cap);
+                pos = getposition();
+                bool isok = true;
+                if (abs(pos[0]-i) > 100) isok = false;
+                if (abs(pos[1]-j) > 100) isok = false;
+                // if (abs(pos[2]) > ) isok = false;
+                if(isok){
+                    cout << "Position is OK" << endl;
+                    break;
+                }else{
+                    cout << "Position is not close enough with x,y,theta= " << pos[0] << " " << pos[1] << " " << pos[2] << " " << pos[2]*180/M_PI << endl;
+                    string tmp;
+                    cout << "please move to " << i << " " << j << endl;
+                    // cout << "your current position is " <<  << " " << y << endl;
+                    cout << "after move the printer press ENTER" << endl;
+                    cin >> tmp;
+                }
+            }
+            
+        }
+        cout << "Move finish" << endl;
+
+        printer.getCameraImage(cap);
+        // vector<double> pos(3);
+        if(isSimulation) pos = printer.getPositionSimulation(); // x, y, theta
+        else if (!isAruco){
             pos[0] = printer.x;
             pos[1] = printer.y;
             pos[2] = printer.theta;
@@ -617,13 +830,14 @@ void algorithm6(){
             printer.print();
         }
         //show result
-        printer.getCameraImage();
+        printer.getCameraImage(cap);
         cout << "show result" << endl;
         cout << "go to type on simulation screen\n";
         showResult();
         
         zone[j][i] = 0;
         changeDirection(i, j, direction);
+        cout << "change direct to " << i << " " << j << " " << direction << endl;
     }
 }
 

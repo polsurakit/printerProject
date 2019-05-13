@@ -45,6 +45,7 @@ public:
 
     //func
     //constructor
+    myPrinter();
     myPrinter(double cameraX, double cameraY, double cameraZ, Mat field);
     vector<double> getPosition();
     void move(double newX, double newY);
@@ -54,11 +55,13 @@ public:
     void saveTifFile();
     void clearPrintField();
     void print();
-    void getCameraImage();
+    void getCameraImage(VideoCapture cap);
     void update();
 
     void moveSimulation(double newX, double newY);
     vector<double> getPositionSimulation();
+
+    VideoCapture cap;
     
 };
 
