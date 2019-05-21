@@ -37,9 +37,9 @@ public:
     ////// for simulation
     bool noError = false;
     double movePositionError = 10; // *.1 mm.
-    double moveRotationError = 5; // degree
-    double readPositionError = 5; // *.1 mm.
-    double readRotationError = 0.1; //degree
+    double moveRotationError = 1; // degree
+    double readPositionError = 20; // *.1 mm.
+    double readRotationError = 0.25; //degree
     myRandom randomGenerator;
     //////
 

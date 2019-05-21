@@ -23,7 +23,7 @@ using namespace std;
 
 //var
 std::string INPUT_NAME = "test.jpg";
-std::string OUTPUT_NAME = "algor3_new.jpg";
+std::string OUTPUT_NAME = "algoralgor1.jpg";
 int TARGET_H_SIZE = 2700; //0.1 millimeter / pixel
 int TARGET_W_SIZE = 3700; //0.1 millimeter / pixel
 
@@ -506,6 +506,11 @@ vector<pair<int,int> > drt;
 void filldrt(){
     int t = 0;
     vector<pair<int,int> > drt2;
+    // drt.push_back(make_pair(2050,2050));
+    // drt.push_back(make_pair(2050,3050));
+    // drt.push_back(make_pair(3050,2050));
+    // drt.push_back(make_pair(3050,3050));
+    // return;
     for(int i = firstPosition ; i < BOTTOMRIGHTY ; i+=moveStep){
         if(t%2==1){
             drt2.resize(0);
@@ -682,6 +687,7 @@ void algorithm6(){
     int direction = 0;
     int i = firstPosition;
     int j = firstPosition;
+    string name = "slide.jpg";
     //map<pair<int,int>,int > mp;
     while(direction <= 3){
         cout << i << " " << j << endl;
@@ -782,6 +788,18 @@ void algorithm6(){
                         // if (c==1){
                         //     c0 = 128;;
                         // }else c1 = 128;
+                        // c0 = min(255,(255+exColor[0])/2);
+                        // c1 = min(255,(255+exColor[1])/2);
+                        // c2 = min(255,(255+exColor[2])/2);
+                        if(c%2==(Y+X)%2){
+                            c0 = exColor[0];
+                            c1 = exColor[1];
+                            c2 = exColor[2];
+                        }else{
+                            c0 = 255;
+                            c1 = 255;
+                            c2 = 255;
+                        }
 
                         color = Vec3b(c0,c1,c2);
                         
@@ -810,6 +828,32 @@ void algorithm6(){
                             c2 = 255;
                             //cout << posY << " " << posX << " " << Y << " " << X << " 4" << endl;
                         }
+                        // c0 = min(255,(255*3+exColor[0])/4);
+                        // c1 = min(255,(255*3+exColor[1])/4);
+                        // c2 = min(255,(255*3+exColor[2])/4);
+
+                        if(Y > j && X > i && (X+Y)%4==0){
+                            c0 = exColor[0];
+                            c1 = exColor[1];
+                            c2 = exColor[2];
+                        }else if(Y > j && X < i && (X+Y)%4==1){
+                            c0 = exColor[0];
+                            c1 = exColor[1];
+                            c2 = exColor[2];
+                        }else if(Y < j && X > i && (X+Y)%4==2){
+                            c0 = exColor[0];
+                            c1 = exColor[1];
+                            c2 = exColor[2];
+                        }else if(Y < j && X < i && (X+Y)%4==3){
+                            c0 = exColor[0];
+                            c1 = exColor[1];
+                            c2 = exColor[2];
+                        }else{
+                            c0 = 255;
+                            c1 = 255;
+                            c2 = 255;
+                            //cout << posY << " " << posX << " " << Y << " " << X << " 4" << endl;
+                        }
                         color = Vec3b(c0,c1,c2);
                     }
                 }
@@ -829,6 +873,9 @@ void algorithm6(){
         //command printer to print that picture
             printer.print();
         }
+        Mat cropedImage = field(Rect(TOPLEFTX,TOPLEFTY,TARGET_W_SIZE,TARGET_H_SIZE));
+        imwrite(name, cropedImage);
+        name = "q"+name;
         //show result
         printer.getCameraImage(cap);
         cout << "show result" << endl;

@@ -530,9 +530,13 @@ elif mode == 5:
         y = M.dot(np.array([info[3]]).transpose()) - t
         #print(y)
         rot_mat = np.array(info[:3]).dot(rot)
+
         yaw = 180 / math.pi * math.atan(rot_mat[1][0] /rot_mat[0][0])
-        pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) + math.pow(rot_mat[2][2], 2)))
+        pitch = 180 / math.pi * math.atan(-1 * rot_mat[2][0] / math.sqrt(pow(rot_mat[2][1], 2) 
+            + math.pow(rot_mat[2][2], 2)))
         roll = 180 / math.pi * math.atan(rot_mat[2][1] /rot_mat[2][2])
+
+        
         print('yaw,pitch,roll=',yaw,pitch,roll)
         print('################## x,y,z=',y[0,0],y[1,0],y[2,0])
 
