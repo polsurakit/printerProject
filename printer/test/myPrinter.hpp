@@ -38,8 +38,8 @@ public:
     bool noError = false;
     double movePositionError = 10; // *.1 mm.
     double moveRotationError = 1; // degree
-    double readPositionError = 20; // *.1 mm.
-    double readRotationError = 0.25; //degree
+    double readPositionError = 1; // *.1 mm.
+    double readRotationError = 0.01; //degree
     myRandom randomGenerator;
     //////
 

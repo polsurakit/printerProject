@@ -22,10 +22,10 @@ using namespace std;
 #include "opencv2/aruco.hpp" 
 
 //var
-std::string INPUT_NAME = "test.jpg";
+std::string INPUT_NAME = "grid2.jpg";
 std::string OUTPUT_NAME = "algoralgor1.jpg";
-int TARGET_H_SIZE = 2700; //0.1 millimeter / pixel
-int TARGET_W_SIZE = 3700; //0.1 millimeter / pixel
+int TARGET_H_SIZE = 3204; //0.1 millimeter / pixel
+int TARGET_W_SIZE = 1800; //0.1 millimeter / pixel
 
 myRandom randomGenerator;
 
@@ -43,92 +43,11 @@ Mat expectedImage;
 Mat expectedResult;
 
 
-string type2str(int type) {
-  string r;
-
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT);
-
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
-
-  r += "C";
-  r += (chans+'0');
-
-  return r;
-}
-
 Mat polpolpol(Mat im);
 
 cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
 VideoCapture cap;
 
-void testaluco(){
-    cv::Mat markerImage; 
-    // cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
- 
-    cv::aruco::drawMarker(dictionary, 23, 200, markerImage, 1);
-    // Mat field(fieldSize,fieldSize,CV_8UC3,Vec3b(0,0,0));
-    Mat g(300,300,CV_8UC3,Vec3b(255,255,255));
-
-    for(int i = 0 ; i < 200 ; i++){
-        for(int j = 0 ; j < 200 ; j++){
-            if((int)markerImage.at<uchar>(i,j)==0){
-                g.at<Vec3b>(i+50,j+50) = Vec3b(0,0,0);
-            }
-            // cout << (int)markerImage.at<unsigned char>(i,j) << " ";
-        }
-        // cout << endl;
-    }
-
-    imshow( "Display window", g);
-    waitKey(0);
-    imshow( "Display window", markerImage);
-    waitKey(0);
-
-    g = imread("IMG_7242.JPG");
-    vector< int > markerIds; 
-    vector< vector<Point2f> > markerCorners, rejectedCandidates; 
-    cv::Ptr<cv::aruco::DetectorParameters> parameters; 
-    cout <<"ddd" << endl;
-    cv::aruco::detectMarkers(g, dictionary, markerCorners, markerIds);
-    cout << 123123123 << endl;
-    cv::aruco::drawDetectedMarkers(g, markerCorners, markerIds);
-    cout << 123123123 << endl;
-    for (int i = 0 ; i < markerCorners.size() ; i++){
-        cout << markerCorners.size() << " " << markerCorners[i].size() << endl;
-        for(int j = 0 ; j < markerCorners[i].size() ; j++){
-            cout << markerCorners[i][j] << " ";
-        }
-        cout << endl;
-    }
-    cout << markerIds.size() << " " << markerIds[0] << endl;
-    Mat show;
-    resize(g,show,Size(1000, 1000),0,0);
-
-    imshow( "Display window", show);
-    waitKey(0);
-
-}
-
-void test2(){
-    cv::Ptr<cv::aruco::Dictionary> dictionary =   cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
-    cv::Ptr<cv::aruco::GridBoard> board = cv::aruco::GridBoard::create(5, 7, 0.04, 0.01, dictionary);
-    cv::Mat boardImage;
-    board->draw( cv::Size(1800, 1500), boardImage, 10, 1 );
-    imwrite("aruco.jpg", boardImage);
-    imshow( "Display window", boardImage);
-    waitKey(0);
-
-}
 
 map<int,double> markerPosXs;
 map<int,double> markerPosYs;
@@ -313,8 +232,8 @@ vector<double> getposition(){
 
     double printerToCameraXGlobal = cos(cameraGlobalTheta)*cameraOffsetX - sin(cameraGlobalTheta)*cameraOffsetY;
     double printerToCameraYGlobal = sin(cameraGlobalTheta)*cameraOffsetX + cos(cameraGlobalTheta)*cameraOffsetY;
-    // cout << "printerToCameraXGlobal " << printerToCameraXGlobal << end;
-    // cout << "printerToCameraYGlobal " << printerToCameraYGlobal << end;
+    cout << "printerToCameraXGlobal " << printerToCameraXGlobal << endl;
+    cout << "printerToCameraYGlobal " << printerToCameraYGlobal << endl;
 
     double cameraThetaOffset = atan(45.0/1495.0);//
 
@@ -323,7 +242,7 @@ vector<double> getposition(){
 
     result.push_back(printerGlobalPosX);
     result.push_back(printerGlobalPosY);
-    result.push_back(-cameraGlobalTheta + cameraThetaOffset);
+    result.push_back(-cameraGlobalTheta + cameraThetaOffset - 1.22/180*M_PI);
 
     printer.x = result[0];
     printer.y = result[1];
@@ -351,6 +270,29 @@ void initialize(){
     {
         cout <<  "Could not open or find the image" << std::endl ;
     }
+    for(int i = 0 ; i < image.rows ; i++){
+        image.at<Vec3b>(i,0) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,1) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,2) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,3) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,image.cols-1) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,image.cols-2) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,image.cols-3) = Vec3b(255,255,0);
+        image.at<Vec3b>(i,image.cols-4) = Vec3b(255,255,0);
+    }
+    for(int i = 0 ; i < image.cols ; i++){
+        image.at<Vec3b>(0,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(1,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(2,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(3,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(image.rows-1,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(image.rows-2,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(image.rows-3,i) = Vec3b(255,255,0);
+        image.at<Vec3b>(image.rows-4,i) = Vec3b(255,255,0);
+    }
+    imshow( "Display window", image);
+    waitKey(0);
+
     cout << 1 ;
     resize(image,showedImage,Size(smallWindowSize, smallWindowSize),0,0);
     
@@ -790,16 +732,16 @@ void algorithm6(){
                         // }else c1 = 128;
                         // c0 = min(255,(255+exColor[0])/2);
                         // c1 = min(255,(255+exColor[1])/2);
-                        // c2 = min(255,(255+exColor[2])/2);
-                        if(c%2==(Y+X)%2){
-                            c0 = exColor[0];
-                            c1 = exColor[1];
-                            c2 = exColor[2];
-                        }else{
-                            c0 = 255;
-                            c1 = 255;
-                            c2 = 255;
-                        }
+                        // // c2 = min(255,(255+exColor[2])/2);
+                        // if(c%2==(Y+X)%2){
+                        //     c0 = exColor[0];
+                        //     c1 = exColor[1];
+                        //     c2 = exColor[2];
+                        // }else{
+                        //     c0 = 255;
+                        //     c1 = 255;
+                        //     c2 = 255;
+                        // }
 
                         color = Vec3b(c0,c1,c2);
                         
@@ -832,28 +774,28 @@ void algorithm6(){
                         // c1 = min(255,(255*3+exColor[1])/4);
                         // c2 = min(255,(255*3+exColor[2])/4);
 
-                        if(Y > j && X > i && (X+Y)%4==0){
-                            c0 = exColor[0];
-                            c1 = exColor[1];
-                            c2 = exColor[2];
-                        }else if(Y > j && X < i && (X+Y)%4==1){
-                            c0 = exColor[0];
-                            c1 = exColor[1];
-                            c2 = exColor[2];
-                        }else if(Y < j && X > i && (X+Y)%4==2){
-                            c0 = exColor[0];
-                            c1 = exColor[1];
-                            c2 = exColor[2];
-                        }else if(Y < j && X < i && (X+Y)%4==3){
-                            c0 = exColor[0];
-                            c1 = exColor[1];
-                            c2 = exColor[2];
-                        }else{
-                            c0 = 255;
-                            c1 = 255;
-                            c2 = 255;
-                            //cout << posY << " " << posX << " " << Y << " " << X << " 4" << endl;
-                        }
+                        // if(Y > j && X > i && (X+Y)%4==0){
+                        //     c0 = exColor[0];
+                        //     c1 = exColor[1];
+                        //     c2 = exColor[2];
+                        // }else if(Y > j && X < i && (X+Y)%4==1){
+                        //     c0 = exColor[0];
+                        //     c1 = exColor[1];
+                        //     c2 = exColor[2];
+                        // }else if(Y < j && X > i && (X+Y)%4==2){
+                        //     c0 = exColor[0];
+                        //     c1 = exColor[1];
+                        //     c2 = exColor[2];
+                        // }else if(Y < j && X < i && (X+Y)%4==3){
+                        //     c0 = exColor[0];
+                        //     c1 = exColor[1];
+                        //     c2 = exColor[2];
+                        // }else{
+                        //     c0 = 255;
+                        //     c1 = 255;
+                        //     c2 = 255;
+                        //     //cout << posY << " " << posX << " " << Y << " " << X << " 4" << endl;
+                        // }
                         color = Vec3b(c0,c1,c2);
                     }
                 }
@@ -873,9 +815,9 @@ void algorithm6(){
         //command printer to print that picture
             printer.print();
         }
-        Mat cropedImage = field(Rect(TOPLEFTX,TOPLEFTY,TARGET_W_SIZE,TARGET_H_SIZE));
-        imwrite(name, cropedImage);
-        name = "q"+name;
+        // Mat cropedImage = field(Rect(TOPLEFTX,TOPLEFTY,TARGET_W_SIZE,TARGET_H_SIZE));
+        // imwrite(name, cropedImage);
+        // name = "q"+name;
         //show result
         printer.getCameraImage(cap);
         cout << "show result" << endl;

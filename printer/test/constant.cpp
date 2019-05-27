@@ -5,7 +5,7 @@
 
 
 
-const bool isSimulation = true;
+const bool isSimulation = false;
 const bool isAruco = true;
 
 const int DPI = 100;
@@ -13,7 +13,7 @@ const bool isBlur = false;
 
 
 
-const int fieldSize = 7000; //1.5m x 1.5m field
+const int fieldSize = 4500; //1.5m x 1.5m field
 
 
 const int TOPLEFTX = 500;
